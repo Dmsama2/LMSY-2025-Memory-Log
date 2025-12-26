@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LMSY 2025 · Memory Log</title>
+    
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- 3. Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 4. Color Thief -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
+
+    <!-- 5. Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        window.FirebaseSDK = { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, doc, setDoc, getDoc, collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp, increment };
+    </script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'lmsy-blue': '#A3D8F4',
+                        'lmsy-pink': '#F4A3C6',
+                        'lmsy-dark': '#2D3748',
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace'],
+                    },
+                    animation: {
+                        'page-turn': 'pageTurn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'fade-out': 'fadeOut 0.5s ease-in forwards',
+                        'star-twinkle': 'starTwinkle 3s ease-in-out infinite',
+                        'pop-in': 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-guide': 'pulseGuide 2s infinite',
+                    },
+                    keyframes: {
+                        pageTurn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        fadeOut: {
+                            '0%': { opacity: '1' },
+                            '100%': { opacity: '0' },
+                        },
+                        popIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.5)' },
+                            '100%': { opacity: '1', transform: 'scale(1)' },
+                        },
+                        starTwinkle: {
+                            '0%, 100%': { opacity: '0.6', transform: 'scale(1)' },
+                            '50%': { opacity: '1', transform: 'scale(1.2)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        pulseGuide: {
+                            '0%, 100%': { opacity: '0.8', transform: 'scale(1)' },
+                            '50%': { opacity: '0.4', transform: 'scale(0.95)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Fonts & Styles -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&family=Space+Mono:wght@700&display=swap');
+        
+        body { 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none; 
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .seamless-overlay {
+            background: linear-gradient(to right, 
+                rgba(255, 255, 255, 0.98) 0%, 
+                rgba(255, 255, 255, 0.95) 45%, 
+                rgba(255, 255, 255, 0.8) 55%, 
+                rgba(255, 255, 255, 0) 100%);
+            transition: background 1s ease;
+        }
+
+        .seamless-overlay.dark-mode {
+            background: linear-gradient(to right, 
+                rgba(15, 23, 42, 0.98) 0%, 
+                rgba(15, 23, 42, 0.95) 45%, 
+                rgba(15, 23, 42, 0.8) 65%, 
+                rgba(15, 23, 42, 0) 100%);
+        }
+
+        @media (max-width: 1024px) {
+            .seamless-overlay {
+                background: linear-gradient(to bottom, 
+                    rgba(255, 255, 255, 0.98) 0%, 
+                    rgba(255, 255, 255, 0.95) 60%, 
+                    rgba(255, 255, 255, 0) 100%);
+            }
+            .seamless-overlay.dark-mode {
+                background: linear-gradient(to bottom, 
+                    rgba(15, 23, 42, 0.98) 0%, 
+                    rgba(15, 23, 42, 0.95) 60%, 
+                    rgba(15, 23, 42, 0) 100%);
+            }
+        }
+
+        .music-bar {
+            width: 3px;
+            background: currentColor;
+            animation: music-wave 0.8s ease-in-out infinite;
+        }
+        @keyframes music-wave { 0%, 100% { height: 30%; } 50% { height: 100%; } }
+        .music-bar:nth-child(2) { animation-delay: 0.1s; }
+        .music-bar:nth-child(3) { animation-delay: 0.2s; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
+
+        .theme-transition { transition: all 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .star-item { cursor: pointer; transition: transform 0.3s ease; }
+        .star-item:hover { transform: scale(1.5) rotate(15deg); z-index: 50; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        // --- Data Configuration ---
+        const BGM = {
+            url: "https://raw.githubusercontent.com/Dmsama2/Music/main/ImYours.mp3", 
+            title: "I'm Yours",
+            artist: "Sonya"
+        };
+        
+        const DEFAULT_IMAGE = 'https://i.imgur.com/JP6F4PI.jpg'; 
+        
+        // --- STORY DATA (RE-POPULATED WITH ORIGINAL COPY & DETAILED USER DATA) ---
+        const STORY_DATA = [
+            { type: 'intro' },
+            { 
+                type: 'month', monthNum: '03', monthEn: 'MARCH', year: '2025',
+                title: 'Beginning · 故事开始',
+                desc: 'From the first runway to global fan meetings, our story began with excitement.',
+                descCn: '从初次T台到全球见面会，我们的故事在期待中拉开序幕。',
+                stats: { value: '9', unit: 'Activities', label: 'Month Total · 本月活动' },
+                highlight: { tag: '#LMSY1stFMinVN', label: 'Global Tour · 启航' },
+                events: [
+                    { day: '05', title: 'LMSY MINT SUMMER RUNWAY', tag: '#SiamCenterxMintxLMSY' },
+                    { day: '08', title: 'LMSY VIETNAM 1ST FM', tag: '#LMSY1stFMinVN' },
+                    { day: '13', title: 'SHOP TAOBAO WT LMSY', tag: '#LMSY2ndxTaiXiaoXiang' },
+                    { day: '15', title: 'LMSY MANILA 1ST FM', tag: '#LMSY1stFMinManila' },
+                    { day: '15', title: 'Buddy Besties x LMSY', tag: 'Thailand Local Business' },
+                    { day: '22', title: 'PARTY WITH LMSY', tag: '#ArousarxLMSYspringparty' },
+                    { day: '28', title: 'ENJOY TASTY WT LMSY', tag: '#LMSYxPANDATHAIHOUSE2nd' },
+                    { day: '29', title: 'LMSY FANSIGN WT BESTIES', tag: '#BuddyBestiesxPresenterLMSY' },
+                    { day: '30', title: 'HARMONY SECRET FANSIGN', tag: '#BookFair2025xHarmonySecret' }
+                ]
+            },
+            { 
+                type: 'month', monthNum: '04', monthEn: 'APRIL', year: '2025',
+                title: 'Milestones · 突破时刻',
+                desc: 'Celebrating birthdays and first milestones together. The love is growing.',
+                descCn: '共同庆祝生日与初次里程碑，爱意在每一次相聚中生长。',
+                stats: { value: '229.5', unit: 'K', label: 'Engagement · 互动峰值' },
+                highlight: { tag: '#HappySonyaDay', label: 'Birthday · 生日快乐' },
+                events: [
+                    { day: '03', title: 'ENJOY TASTY WT LMSY', tag: '#LMSYxPANDATHAIHOUSE2nd' },
+                    { day: '03', title: 'I HATE MONDAY X LMSY', tag: 'Trend Activity' },
+                    { day: '03', title: '1st MV Launch', tag: 'Participation' },
+                    { day: '05', title: 'LMSY TAIPEI 1ST FM', tag: 'Eng: 173.7K / Heat: 55.7K' },
+                    { day: '11', title: 'LMSY WT TAITIANTIAN', tag: '#LMSYxTaiTianTian' },
+                    { day: '12', title: 'LOTUSS WITH LMSY', tag: 'Eng: 158.5K / Heat: 77K' },
+                    { day: '16', title: 'HS Teaser 5M Views', tag: 'Milestone' },
+                    { day: '18', title: 'Sonya Birthday', tag: 'Eng: 229.5K / Heat: 91.5K' },
+                    { day: '26', title: 'LMSY 1ST FS CHONGQING', tag: 'Eng: 171K / Heat: 64K' }
+                ]
+            },
+            { 
+                type: 'month', monthNum: '05', monthEn: 'MAY', year: '2025',
+                title: 'Anticipation · 满怀期待',
+                desc: 'Awards, fan meetings, and the start of our favorite Thursday ritual.',
+                descCn: '颁奖礼、见面会，还有我们最爱的“周四之约”正式开启。',
+                stats: { value: '220.1', unit: 'K', label: 'Engagement · 互动峰值' },
+                highlight: { tag: '#FittingHarmonySecret', label: 'New Journey · 新旅程' },
+                events: [
+                    { day: '02', title: 'LMSY WT THAIXIAOXIANG', tag: 'Eng: 100K / Heat: 34K' },
+                    { day: '03', title: '#พิฆเนศวรครั้งที่13xLMSY', tag: 'Eng: 170K / Heat: 97K' },
+                    { day: '08', title: 'HS Trailer 6M Views', tag: 'Milestone' },
+                    { day: '14', title: 'LMSY KCL AWARDS 2025', tag: '#คมชัดลึกอวอร์ด21xLMSY' },
+                    { day: '15', title: 'HARMONY SECRET 1st DEAL', tag: '#FittingHarmonySecret' },
+                    { day: '17', title: 'LMSY MACAU 2ND FM', tag: '#LMSYFANMEETINGINMACAU' },
+                    { day: '17', title: 'Thailand 1st Fan Meeting', tag: 'Local Event' },
+                    { day: '16', title: 'HS Fitting Trend', tag: 'Eng: 220.1K / Heat: 67.7K' },
+                    { day: '18', title: 'Macau FM Trend', tag: 'Eng: 145.1K / Heat: 73.8K' },
+                    { day: '20', title: 'LMSYxZHENJICOFFEE', tag: 'Eng: 83.7K / Heat: 27.7K' },
+                    { day: '22', title: 'Secret Vlog Official Launch', tag: 'Every Thursday' },
+                    { day: '24', title: 'CAMBODIA 1ST FM', tag: 'Eng: 190.3K / Heat: 76.1K' },
+                    { day: '29', title: 'SECRET VLOG EP2', tag: 'Eng: 78.9K / Heat: 44K' }
+                ]
+            },
+            { 
+                type: 'month', monthNum: '06', monthEn: 'JUNE', year: '2025',
+                title: 'Milestone · 荣耀进阶',
+                desc: 'Breaking records and reaching new heights. 400K is just the beginning.',
+                descCn: '打破纪录，攀登高峰。40万粉丝仅仅是个开始。',
+                stats: { value: '294', unit: 'K', label: 'Engagement · 互动峰值' },
+                highlight: { tag: '#บวงสรวงHarmonySecret', label: 'Buzz · 热度爆发' },
+                events: [
+                    { day: '05', title: 'SECRET VLOG EP3', tag: 'Eng: 60.9K / Heat: 42.6K' },
+                    { day: '11', title: 'WORSHIP HARMONY SECRET', tag: 'Heat: 182.9K / Eng: 294K' },
+                    { day: '12', title: 'SECRET VLOG EP4', tag: 'Eng: 44.3K / Heat: 39.6K' },
+                    { day: '13', title: 'LMSY MIDATO LIVE', tag: 'Eng: 94.9K / Heat: 107.6K' },
+                    { day: '15', title: '400K IG LOOKMHEE', tag: 'Eng/Heat > 100K' },
+                    { day: '19', title: 'SECRET VLOG EP5', tag: 'Eng: 26.9K / Heat: 28K' },
+                    { day: '24', title: 'SONYA GROWTH 400K', tag: 'Eng: 66.9K / Heat: 118.9K' },
+                    { day: '28', title: 'LMSY X BABIBLUSHING SH', tag: 'Eng: 71.4K / Heat: 32.7K' },
+                    { day: '26', title: 'SECRET LIVE LMSY', tag: 'Eng: 135.2K / Heat: 37.6K' },
+                    { day: '28', title: 'HS TEASER LAUNCH', tag: 'Eng: 236K / Heat: 162.6K' }
+                ]
+            },
+            { 
+                type: 'month', monthNum: '07', monthEn: 'JULY', year: '2025',
+                title: 'Premiere · 盛夏热映',
+                desc: 'The series premiere we waited for. The screens lit up with our pride.',
+                descCn: '期待已久的剧集首映。屏幕亮起的那一刻，满是我们的骄傲。',
+                stats: { value: '264.8', unit: 'K', label: 'Engagement · 互动峰值' },
+                highlight: { tag: '#AsiaTopAwards2025xLMSY', label: 'Awards Night · 颁奖礼' },
+                events: [
+                    { day: '01', title: 'HS PREMIER TICKETING', tag: '#เปิดศึกเบสตี้ชิงบัตรดีลลับ' },
+                    { day: '01', title: 'HS Teaser 7M Views', tag: 'Milestone' },
+                    { day: '03', title: 'SECRET VLOG EP7', tag: 'Eng: 48.9K / Heat: 21.2K' },
+                    { day: '05', title: 'LIVE COCONUT WT LMSY', tag: 'Eng: 88.8K / Heat: 55.8K' },
+                    { day: '10', title: 'SECRET VLOG EP8', tag: 'Eng: 86.6K / Heat: 57.7K' },
+                    { day: '14', title: 'OST: Secret Deal Launch', tag: 'Major Streaming' },
+                    { day: '14', title: 'OUR SECRET DEAL TREND', tag: 'Eng: 38.4K / Heat: 24.6K' },
+                    { day: '14', title: 'HS TRAILER TREND', tag: 'Eng: 260.3K / Heat: 83.5K' },
+                    { day: '19', title: 'LMSY YURI BEST ACTRESS', tag: 'Eng: 264.8K / Heat: 102.2K' },
+                    { day: '17', title: 'SECRET VLOG EP9', tag: 'Eng: 48.7K / Heat: 19.3K' },
+                    { day: '21', title: 'ONLY WE KNOW LAUNCH', tag: 'Eng: 45.5K / Heat: 25.5K' },
+                    { day: '24', title: 'HS SECRET MEETING', tag: '#รวมพลSecretDeal' },
+                    { day: '26', title: 'Harmony Secret On Air', tag: 'Series Launch' }
+                ]
+            },
+            { 
+                type: 'month', monthNum: '08', monthEn: 'AUGUST', year: '2025',
+                title: 'Phenomenon · 现象级',
+                desc: 'Explosive engagement. 1.7 Million interactions proved our power.',
+                descCn: '现象级的热度。170万次互动，证明了我们共同的力量。',
+                stats: { value: '1.7', unit: 'M', label: 'Engagement · 年度最高' },
+                highlight: { tag: '#HarmonySecretEP5', label: 'Viral · 全网热议' },
+                events: [
+                    { day: '02', title: 'SECRET DEAL EP2', tag: 'Eng: 867.9K / Heat: 328.3K' },
+                    { day: '07', title: '1ST SECRET MEETING', tag: 'Eng: 195.4K / Heat: 88.9K' },
+                    { day: '07', title: 'SECRET DEAL AT EFM', tag: 'Eng: 131.5K / Heat: 60.6K' },
+                    { day: '09', title: 'SECRET DEAL EP3', tag: 'Eng: 687.7K / Heat: 326.2K' },
+                    { day: '16', title: 'SECRET DEAL EP4', tag: 'Eng: 899.7K / Heat: 549.2K' },
+                    { day: '13', title: 'SECRET REACTION EP3', tag: 'Eng: 188K / Heat: 34.9K' },
+                    { day: '16', title: '#WeiboxLMSY Night', tag: 'Eng: 291.5K / Heat: 65.8K' },
+                    { day: '18', title: '1ST PRESS TOUR HS', tag: '#HarmonySecret_Presstour' },
+                    { day: '23', title: 'SECRET DEAL EP5', tag: 'Eng: 1.7M / Heat: 1.1M' },
+                    { day: '20', title: 'SECRET REACTION EP4', tag: 'Eng: 122.7K / Heat: 21.5K' },
+                    { day: '30', title: 'SECRET DEAL EP6', tag: 'Eng: 1.1M / Heat: 1.2M' },
+                    { day: '29', title: 'LMSY SAVAGE ROSES', tag: '#LMSYxKOHIOK' },
+                    { day: '28', title: 'LMSY IG 500K Fans', tag: 'Milestone' }
+                ]
+            },
+            { 
+                type: 'month', monthNum: '09', monthEn: 'SEPTEMBER', year: '2025',
+                title: 'Climax · 璀璨巅峰',
+                desc: 'The grand finale. Tears, joy, and the highest record ever.',
+                descCn: '盛大的终章。泪水与欢笑交织，创下年度最高的230万记录。',
+                stats: { value: '2.3', unit: 'M', label: 'Engagement · 互动巅峰' },
+                highlight: { tag: '#HarmonySecretFinalEP', label: 'Grand Finale · 完美收官' },
+                events: [
+                    { day: '05', title: '2ND PRESS TOUR HS', tag: '#HarmonySecret_Presstour' },
+                    { day: '06', title: 'SECRET DEAL EP7', tag: 'Eng: 1.2M / Heat: 1M' },
+                    { day: '05', title: 'POND’S MIRACLE SECRET', tag: 'Heat: 23.2K / Eng: 83.2K' },
+                    { day: '05', title: 'GROWING TOGETHER', tag: 'Heat: 44.6K / Eng: 159.5K' },
+                    { day: '05', title: 'WHOSTHAT X LMSY', tag: 'Heat: 10K / Eng: 40.7K' },
+                    { day: '08', title: 'LMSY DEEP TALK', tag: 'Eng: 232.9K / Heat: 46.7K' },
+                    { day: '09', title: 'LMSY SHINING 500K', tag: 'Heat: 20.6K / Eng: 65.8K' },
+                    { day: '10', title: 'SECRET REACTION EP7', tag: 'Heat: 16.5K / Eng: 104.1K' },
+                    { day: '13', title: 'HS FINAL EP MEETING', tag: 'Heat: 1.7M / Eng: 2.3M' },
+                    { day: '15', title: 'EFW2025 PRESS CON', tag: 'Heat: 109.9K / Eng: 348.3K' },
+                    { day: '17', title: 'SECRET REACTION EP8', tag: 'Heat: 102.1K / Eng: 141.7K' },
+                    { day: '21', title: 'MACAU 3RD FM', tag: 'Heat: 303.1K / Eng: 469.5K' },
+                    { day: '23', title: 'YENT AWARDS 2025', tag: 'Heat: 307.2K / Eng: 630K' },
+                    { day: '26', title: 'DREAM WT LMSY', tag: 'Heat: 56.8K / Eng: 171.7K' }
+                ]
+            },
+            { 
+                type: 'month', monthNum: '10', monthEn: 'OCTOBER', year: '2025',
+                title: 'Devotion · 坚定奔赴',
+                desc: 'From Nanning to Hong Kong, filling every venue with love.',
+                descCn: '从南宁到香港，我们用爱填满每一个场馆。',
+                stats: { value: '427.6', unit: 'K', label: 'Engagement · 秀场热度' },
+                highlight: { tag: '#SiamParagonBIFW2025xLMSY', label: 'Fashion Icon · 秀场' },
+                events: [
+                    { day: '04', title: 'LOOKMHEE NANNING 2ND FM', tag: 'Heat: 58.3K / Eng: 180.6K' },
+                    { day: '04', title: 'SONYA FM NANNING 2ND', tag: 'Heat: 58.4K / Eng: 162.2K' },
+                    { day: '11', title: 'LMSY BELOVED IN HK', tag: 'Heat: 331.6K / Eng: 317.2K' },
+                    { day: '16', title: 'LMSY AT SIAM PARAGON', tag: 'Heat: 250.3K / Eng: 427.6K' }
+                ]
+            },
+            { 
+                type: 'month', monthNum: '11', monthEn: 'NOVEMBER', year: '2025',
+                title: 'Accomplishment · 收获满满',
+                desc: 'Awards and new milestones. Walking side by side into the light.',
+                descCn: '奖项与新里程碑。并肩同行，走向更耀眼的光芒。',
+                stats: { value: '318.5', unit: 'K', label: 'Engagement · 互动峰值' },
+                highlight: { tag: '#HOWEAWARDS2025XLMSY', label: 'Awards Night · 颁奖礼' },
+                events: [
+                    { day: '01', title: 'LMSY FOAMDREAM PARTY', tag: 'Heat: 55.3K / Eng: 192.2K' },
+                    { day: '05', title: 'LMSY AT IN THE 8IGHT', tag: 'Heat: 130.2K / Eng: 253.7K' },
+                    { day: '07', title: 'LMSY AT IQIYI IJOY', tag: 'Heat: 230.1K / Eng: 277.2K' },
+                    { day: '06', title: 'SY Egypt Fans 600K', tag: 'Followers Milestone' },
+                    { day: '10', title: 'SONYASARANN 600K IG', tag: 'Heat: 53.3K / Eng: 60.8K' },
+                    { day: '12', title: 'LMSY AT HOWE AWARDS', tag: 'Heat: 205.3K / Eng: 318.5K' },
+                    { day: '16', title: 'Lookmhee IG 600K', tag: 'Followers Milestone' },
+                    { day: '14', title: 'LMSY EFW2025 MOMENT', tag: '#EFW2025xLMSY #SOCIALBUZZ' },
+                    { day: '23', title: 'LMSY SIP THE VIBE LIVE', tag: 'Heat: 68.8K / Eng: 116.3K' },
+                    { day: '22', title: 'SY TK 600K Fans', tag: 'Milestone' },
+                    { day: '29', title: 'LM WUHAN FANSIGN', tag: '#LOOKMHEExFirstFansignWuHan' },
+                    { day: '30', title: 'SY WUHAN FANSIGN', tag: '#SONYAxFirstFansignWuHan' }
+                ]
+            },
+            { 
+                type: 'month', monthNum: '12', monthEn: 'DECEMBER', year: '2025',
+                title: 'Conclusion · 岁末华章',
+                desc: 'Closing the year with prestigious awards and international recognition.',
+                descCn: '以年度荣誉与海外认可为这一年画上完美句点，感恩每一份支持。',
+                stats: { value: '424.5', unit: 'K', label: 'Engagement · 互动峰值' },
+                highlight: { tag: '#PersonOfTheYearAwards2025xLMSY', label: 'Awards · 年度荣誉' },
+                events: [
+                    { day: '11', title: 'EFW2025 TRENDS', tag: 'Results: 111.1K / Eng: 424.5K' },
+                    { day: '11', title: 'LMSY SOCIAL BUZZ', tag: 'Results: 48.8K / Eng: 136.9K' },
+                    { day: '11', title: 'LMSY x NICHP', tag: 'Results: 55.3K / Eng: 239.3K' },
+                    { day: '11', title: 'LMSY EFW MOMENT', tag: 'Results: 105.5K / Eng: 397.9K' },
+                    { day: '14', title: 'LMSY 1ST FM IN SG', tag: 'Heat: 169.9K / Eng: 258.5K' },
+                    { day: '16', title: 'Thailand Headline AWARDS', tag: 'Heat: 175.4K / Eng: 330.8K' },
+                    { day: '20', title: 'WINTER WHISPERS LM', tag: 'Heat: 76.2K / Eng: 97.9K' },
+                    { day: '21', title: 'SY 1ST FM FUZHOU', tag: 'Heat: 74.9K / Eng: 147.7K' },
+                    { day: '27', title: 'MYSTIC ROMANCE LM', tag: 'Christmas Night' }
+                ]
+            },
+            { type: 'letter' },
+            { type: 'wish' }
+        ];
+
+        // --- Helper Components ---
+        const Icon = ({ name, size = 20, className }) => {
+            const paths = {
+                play: <polygon points="5 3 19 12 5 21 5 3" />,
+                pause: <g><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></g>,
+                upload: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />,
+                chevronRight: <path d="m9 18 6-6-6-6" />,
+                chevronLeft: <path d="m15 18-6-6 6-6" />,
+                chevronDown: <path d="m6 9 6 6 6-6" />,
+                star: <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor" />,
+                plus: <path d="M5 12h14M12 5v14" />,
+                x: <path d="M18 6L6 18M6 6l12 12" />,
+                trash: <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />,
+                music: <path d="M9 18V5l12-2v13" />,
+                quote: <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H3c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h1c0 2.5-2 4.5-4 5v1h3zm13 0c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-5c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h1c0 2.5-2 4.5-4 5v1h3z" fill="currentColor" />,
+                link: <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />,
+            };
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {paths[name] || paths.star}
+                </svg>
+            );
+        };
+
+        // --- Slides Components ---
+        
+        const IntroSlide = ({ onStart, theme, onSecretTrigger }) => (
+            <div className="h-full flex flex-col justify-center items-center text-center px-8 relative group" onClick={onStart}>
+                <div className="space-y-6 relative z-20 animate-fade-in">
+                    <h2 className="text-xl font-serif italic tracking-widest text-gray-500">LMSY Memory Log</h2>
+                    <h1 
+                        className="text-8xl font-serif font-bold text-gray-800 tracking-tighter leading-none italic theme-transition select-none active:scale-95 transform transition-transform" 
+                        style={{ color: theme.primary, cursor: 'default' }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onSecretTrigger();
+                        }}
+                    >
+                        2025
+                    </h1>
+                    <div className="w-24 h-1 bg-gray-200 mx-auto rounded-full overflow-hidden">
+                        <div className="h-full w-full animate-shimmer" style={{ background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)` }}></div>
+                    </div>
+                    <p className="text-sm font-sans text-gray-400 uppercase tracking-[0.3em]">Our Journey Together</p>
+                </div>
+                
+                <div className="absolute bottom-20 left-0 right-0 flex flex-col items-center animate-pulse">
+                    <button className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/80 shadow-lg border border-gray-100 hover:scale-105 transition-transform backdrop-blur-sm">
+                        <span className="text-xs font-bold uppercase tracking-widest text-gray-600">Start Reading</span>
+                        <Icon name="chevronRight" size={14} />
+                    </button>
+                </div>
+            </div>
+        );
+
+        const MonthSlide = ({ data, theme }) => {
+            const [showAll, setShowAll] = useState(false);
+            useEffect(() => setShowAll(false), [data]);
+            const displayEvents = showAll ? data.events : data.events.slice(0, 4);
+
+            return (
+                <div className="h-full flex flex-col justify-center px-8 md:px-12 relative animate-page-turn">
+                    <div className="absolute top-[-20%] left-0 text-[10rem] md:text-[14rem] font-bold font-serif opacity-30 pointer-events-none theme-transition select-none z-0 leading-none mix-blend-multiply" style={{ color: theme.primary }}>
+                        {data.monthNum}
+                    </div>
+
+                    <div className="mb-6 relative z-10 mt-8 md:mt-0">
+                        <div className="flex items-center gap-3 mb-2">
+                            <span className="px-3 py-1 rounded-full text-[10px] font-bold text-white tracking-widest uppercase theme-transition shadow-sm" style={{ backgroundColor: theme.accent }}>{data.monthEn}</span>
+                            <span className="text-sm font-serif italic text-gray-500">{data.year}</span>
+                        </div>
+                        <h2 className="text-4xl md:text-5xl font-serif font-bold text-gray-800 leading-tight mb-4">{data.title}</h2>
+                        <p className="text-gray-600 font-sans leading-relaxed text-justify max-w-md font-medium text-[15px]">{data.descCn}</p>
+                        <p className="text-xs text-gray-400 mt-2 italic font-serif border-l-2 pl-3 theme-transition" style={{ borderColor: theme.accent }}>{data.desc}</p>
+                    </div>
+
+                    {/* Stats Boxes Area */}
+                    <div className="grid grid-cols-2 gap-4 mb-8 relative z-10">
+                        <div id="stats-box" className="p-4 rounded-2xl bg-white/60 border border-white/60 shadow-sm backdrop-blur-md transition-transform hover:scale-105 h-full flex flex-col justify-between">
+                            <div className="h-12 flex items-center justify-start">
+                                <div className="text-3xl font-serif font-bold theme-transition" style={{ color: theme.primary }}>{data.stats.value}{data.stats.unit}</div>
+                            </div>
+                            <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-2 pt-2 border-t border-gray-200/50">{data.stats.label}</div>
+                        </div>
+                        
+                        <div id="highlight-box" className="p-4 rounded-2xl bg-white/60 border border-white/60 shadow-sm backdrop-blur-md transition-transform hover:scale-105 h-full flex flex-col justify-between">
+                            <div className="h-12 flex items-center justify-start overflow-hidden">
+                                <div className="text-sm font-bold text-gray-800 break-words line-clamp-2">{data.highlight.tag}</div>
+                            </div>
+                            <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-2 pt-2 border-t border-gray-200/50">{data.highlight.label}</div>
+                        </div>
+                    </div>
+
+                    {/* Optimized Event List: Grid-based Symmetrical Alignment */}
+                    <div className={`space-y-4 relative z-10 transition-all duration-500 ${showAll ? 'max-h-[320px] overflow-y-auto custom-scrollbar pr-2' : ''}`}>
+                        {displayEvents.map((ev, i) => (
+                            <div key={i} className="grid grid-cols-2 gap-4 group items-center">
+                                {/* First Column: Date aligned with Left Stats Box */}
+                                <div className="text-[11px] font-bold font-mono opacity-60 flex items-center" style={{ color: theme.primary }}>
+                                    {ev.day}
+                                </div>
+                                
+                                {/* Second Column: Content aligned with Right Highlight Box */}
+                                <div className="flex flex-col justify-center">
+                                    <div className="text-[12px] font-bold text-gray-700 leading-tight group-hover:text-gray-900 transition-colors uppercase tracking-tight truncate">
+                                        {ev.title}
+                                    </div>
+                                    <div className="text-[9px] font-medium text-gray-400 italic tracking-wider truncate">
+                                        {ev.tag}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {data.events.length > 4 && !showAll && (
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); setShowAll(true); }}
+                            className="mt-6 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors self-start z-20"
+                        >
+                            <Icon name="chevronDown" size={12} /> View All Events
+                        </button>
+                    )}
+                </div>
+            );
+        };
+
+        const LetterSlide = ({ theme }) => (
+            <div className="h-full flex flex-col justify-center py-4 px-6 md:px-12 animate-page-turn relative">
+                <div className="max-h-[85vh] overflow-y-auto custom-scrollbar p-6 md:p-10 bg-white/40 backdrop-blur-xl rounded-[2.5rem] border border-white/50 shadow-2xl relative group transition-colors duration-500">
+                    <div className="absolute top-0 left-0 w-2 h-full theme-transition" style={{ backgroundColor: theme.accent }}></div>
+                    <Icon name="quote" size={36} className="absolute top-6 right-8 opacity-10 theme-transition" style={{ color: theme.primary }} />
+                    <h3 className="text-2xl font-serif font-bold text-gray-800 italic mb-5">Dear Bestie,</h3>
+                    <div className="space-y-6 text-[13px] md:text-sm text-gray-700 leading-relaxed font-sans text-justify">
+                        <div className="group/item">
+                            <p className="font-semibold text-gray-800 mb-1">回望这一年，因为LMSY，因为共同的热爱，我们相聚同行，走过了一段温暖而闪光的旅程。</p>
+                            <p className="text-xs text-gray-500 italic font-serif">Looking back on this year, because of LMSY and our shared love, we have walked together on a warm and sparkling journey.</p>
+                        </div>
+                        <div className="group/item">
+                            <p className="font-semibold text-gray-800 mb-1">从Harmony Secret的官宣到终映，从澳门、香港到新加坡、福州……每一场见面会与签售会，都印着我们并肩的足迹。</p>
+                            <p className="text-xs text-gray-500 italic font-serif">From the announcement to the finale of Harmony Secret, from Macau and Hong Kong to Singapore and Fuzhou... every fan meeting and fansign marks our footprints side by side.</p>
+                        </div>
+                        <div className="group/item">
+                            <p className="font-semibold text-gray-800 mb-1">每一次突破，都离不开你全力以赴的支持；每一份付出，都化为LMSY前行路上坚实的力量。那些我们共同见证的数字与成长，每一笔都有你的身影。</p>
+                            <p className="text-xs text-gray-500 italic font-serif">Every breakthrough comes from your all-out support; every effort turns into solid strength for LMSY's journey ahead. You are in every figure and growth we witnessed together.</p>
+                        </div>
+                        <div className="group/item">
+                            <p className="font-semibold text-gray-800 mb-1">感谢你在屏幕前的每一次守候，让心意跨越山海、点亮星河；也感谢奔赴现场的每一个你，用奔赴让热爱落地生根、声声回响。</p>
+                            <p className="text-xs text-gray-500 italic font-serif">Thank you for every wait behind the screen, letting love cross mountains and seas to light up the galaxy; and thank you for traveling to the scene, letting passion take root and echo loudly.</p>
+                        </div>
+                    </div>
+                    <div className="mt-8 pt-6 border-t border-gray-100 flex justify-between items-end">
+                        <div className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Forever With You</div>
+                        <div className="font-serif italic text-xl font-bold" style={{ color: theme.accent }}>LMSY</div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const WishSlide = ({ theme, isAdmin }) => {
+            const [wishes, setWishes] = useState([]);
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [newWish, setNewWish] = useState("");
+            const [selectedWish, setSelectedWish] = useState(null);
+            const [user, setUser] = useState(null);
+
+            const { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, collection, query, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, increment } = window.FirebaseSDK;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'lmsy-memory-log';
+            const firebaseConfig = JSON.parse(__firebase_config);
+            const app = window.FirebaseSDK.initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+
+            useEffect(() => {
+                const initAuth = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else { await signInAnonymously(auth); }
+                };
+                initAuth();
+                const unsubscribeAuth = onAuthStateChanged(auth, setUser);
+                return () => unsubscribeAuth();
+            }, []);
+
+            useEffect(() => {
+                if (!user) return;
+                const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'wishes'));
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setWishes(data);
+                }, (error) => console.error("Firestore error:", error));
+                return () => unsubscribe();
+            }, [user]);
+
+            const addWish = async () => {
+                if (!newWish.trim() || !user) return;
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wishes'), {
+                        text: newWish,
+                        x: Math.random() * 80 + 10,
+                        y: Math.random() * 60 + 10,
+                        scale: 0.8 + Math.random() * 0.5,
+                        likes: 0,
+                        createdAt: serverTimestamp(),
+                        userId: user.uid
+                    });
+                    setNewWish("");
+                    setIsModalOpen(false);
+                } catch (e) { console.error("Add wish error:", e); }
+            };
+
+            return (
+                <div className="h-full w-full relative overflow-hidden animate-page-turn">
+                    <div className="absolute inset-0 z-10 pointer-events-none">
+                        {wishes.map(w => (
+                            <div 
+                                key={w.id}
+                                className="absolute text-yellow-400 star-item animate-star-twinkle drop-shadow-lg pointer-events-auto"
+                                style={{ 
+                                    left: `${w.x}%`, 
+                                    top: `${w.y}%`, 
+                                    transform: `scale(${w.scale})`,
+                                    animationDelay: `${parseInt(w.id.slice(0,5), 36) % 5}s`
+                                }}
+                                onClick={(e) => { e.stopPropagation(); setSelectedWish(w); }}
+                            >
+                                <Icon name="star" size={24} fill="currentColor" />
+                                {w.likes > 0 && (
+                                    <div className="absolute -top-2 -right-2 bg-pink-500 text-white text-[8px] font-bold px-1 rounded-full">{w.likes}</div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="relative z-20 h-full flex flex-col justify-end items-center pointer-events-none text-white pb-16 md:pb-12">
+                        <div className="text-center mb-4 backdrop-blur-sm bg-white/10 p-4 rounded-2xl border border-white/10 shadow-lg scale-90 md:scale-100">
+                            <h2 className="text-xl font-serif font-bold mb-1 drop-shadow-md">Make a Wish / 许个愿</h2>
+                            <p className="text-[10px] text-gray-300 font-medium uppercase tracking-wider">Click to add a star / 点击按钮点亮星空</p>
+                        </div>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
+                            className="pointer-events-auto flex items-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-full shadow-xl hover:scale-105 transition-transform theme-transition hover:shadow-white/50"
+                        >
+                            <Icon name="plus" size={14} />
+                            <span className="font-bold tracking-widest text-[10px] uppercase">Write Message / 写下寄语</span>
+                        </button>
+                    </div>
+
+                    {isModalOpen && (
+                        <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                            <div className="bg-white w-full max-w-sm p-6 rounded-2xl shadow-2xl animate-pop-in">
+                                <h3 className="text-lg font-bold text-gray-800 mb-4">New Year Wish / 新年寄语</h3>
+                                <textarea className="w-full p-4 bg-gray-50 rounded-xl mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-pink-200 resize-none text-gray-800" rows="4" placeholder="Write message here..." value={newWish} onChange={e => setNewWish(e.target.value)}></textarea>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setIsModalOpen(false)} className="flex-1 py-3 text-xs font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition">CANCEL / 取消</button>
+                                    <button onClick={addWish} className="flex-1 py-3 text-xs font-bold text-white rounded-xl shadow-lg theme-transition bg-gray-900">SEND / 发送 ✨</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {selectedWish && (
+                        <div className="absolute inset-0 z-50 flex items-center justify-center p-6 animate-fade-in" onClick={(e) => { e.stopPropagation(); setSelectedWish(null); }}>
+                            <div className="bg-yellow-100 w-64 p-6 shadow-xl transform rotate-2 animate-pop-in relative font-mono text-gray-800 text-sm leading-relaxed border-t-8 border-yellow-200/50">
+                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-12 bg-yellow-200/50 blur-sm rounded-full opacity-50"></div>
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="flex-1">"{selectedWish.text}"</div>
+                                    {isAdmin && (
+                                        <button onClick={async (e) => { e.stopPropagation(); await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wishes', selectedWish.id)); setSelectedWish(null); }} className="text-red-500 hover:scale-110 transition ml-2"><Icon name="trash" size={16} /></button>
+                                    )}
+                                </div>
+                                <div className="mt-4 flex justify-between items-center border-t border-yellow-200 pt-2">
+                                    <div className="text-xs opacity-50 font-bold">From a Bestie</div>
+                                    <button onClick={async (e) => { e.stopPropagation(); await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wishes', selectedWish.id), { likes: increment(1) }); }} className="flex items-center gap-1 bg-white/50 px-2 py-1 rounded-full text-lg hover:scale-125 transition-transform active:scale-90">🌸 <span className="text-[10px] font-bold">{selectedWish.likes || 0}</span></button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // --- Main App Component ---
+        const App = () => {
+            const [currentSlide, setCurrentSlide] = useState(0);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [theme, setTheme] = useState({ primary: '#2D3748', accent: '#F4A3C6', bg: '#FFFFFF' });
+            const [showGuide, setShowGuide] = useState(false);
+            const [bgImages, setBgImages] = useState({});
+            const [secretCount, setSecretCount] = useState(0);
+            const [showUpload, setShowUpload] = useState(false);
+            const [user, setUser] = useState(null);
+            const [urlInput, setUrlInput] = useState("");
+            const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+            
+            const audioRef = useRef(null);
+            const imgRef = useRef(null);
+
+            const { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, doc, setDoc, onSnapshot } = window.FirebaseSDK;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'lmsy-memory-log';
+            const firebaseConfig = JSON.parse(__firebase_config);
+            const app = window.FirebaseSDK.initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+
+            useEffect(() => {
+                const initAuth = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else { await signInAnonymously(auth); }
+                };
+                initAuth();
+                const unsubscribeAuth = onAuthStateChanged(auth, setUser);
+                return () => unsubscribeAuth();
+            }, []);
+
+            useEffect(() => {
+                if (!user) return;
+                const unsub = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'backgrounds'), (docSnap) => {
+                    if (docSnap.exists()) setBgImages(prev => ({ ...prev, ...docSnap.data() }));
+                });
+                return () => unsub();
+            }, [user]);
+
+            useEffect(() => {
+                const audio = audioRef.current;
+                const attemptPlay = () => {
+                    if (!audio) return;
+                    audio.volume = 0.5;
+                    audio.play().then(() => setIsPlaying(true)).catch(() => {
+                        const enableAudio = () => { audio.play().then(() => setIsPlaying(true)); document.removeEventListener('click', enableAudio); };
+                        document.addEventListener('click', enableAudio);
+                    });
+                };
+                attemptPlay();
+            }, []);
+
+            const saveImageUrl = async () => {
+                if (!urlInput.trim() || !user) return;
+                try {
+                    const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'backgrounds');
+                    await setDoc(settingsRef, { [`slide_${currentSlide}`]: urlInput.trim() }, { merge: true });
+                    setIsLinkModalOpen(false);
+                    setUrlInput("");
+                } catch (err) { console.error("Cloud Link Sync Failed"); }
+            };
+
+            const nextSlide = () => setCurrentSlide(c => (c < STORY_DATA.length - 1 ? c + 1 : c));
+            const prevSlide = () => setCurrentSlide(c => (c > 0 ? c - 1 : c));
+
+            const handleContainerClick = (e) => {
+                if (e.target.closest('button') || e.target.closest('.upload-zone') || e.target.closest('textarea') || e.target.closest('.star-item') || isLinkModalOpen) return;
+                if (e.clientX > window.innerWidth / 2) nextSlide(); else prevSlide();
+            };
+
+            const handleImageLoad = () => {
+                const colorThief = new ColorThief();
+                const img = imgRef.current;
+                if (img && img.complete && img.naturalWidth > 0) {
+                    try {
+                        const palette = colorThief.getPalette(img, 3);
+                        const primaryHex = `#${((1 << 24) + (palette[0][0] << 16) + (palette[0][1] << 8) + palette[0][2]).toString(16).slice(1)}`;
+                        const accentHex = `#${((1 << 24) + (palette[1][0] << 16) + (palette[1][1] << 8) + palette[1][2]).toString(16).slice(1)}`;
+                        setTheme({ primary: primaryHex, accent: accentHex, bg: 'transparent' });
+                    } catch (e) { setTheme({ primary: '#2D3748', accent: '#F4A3C6', bg: 'transparent' }); }
+                }
+            };
+
+            const currentData = STORY_DATA[currentSlide];
+            const currentBgImage = bgImages[`slide_${currentSlide}`] || bgImages[currentSlide] || DEFAULT_IMAGE;
+            const isWishSlide = currentData.type === 'wish';
+
+            return (
+                <div className="h-screen w-full relative overflow-hidden font-sans" onClick={handleContainerClick}>
+                    <audio ref={audioRef} src={BGM.url} loop crossOrigin="anonymous" />
+                    <div className={`absolute inset-0 z-0 ${isWishSlide ? 'bg-black' : 'bg-gray-100'} transition-colors duration-1000`}>
+                         <img key={currentSlide} ref={imgRef} src={currentBgImage} alt="BG" className={`w-full h-full object-cover animate-fade-in transition-all duration-[2000ms] ${isWishSlide ? 'opacity-40' : 'opacity-100'}`} crossOrigin="anonymous" onLoad={handleImageLoad} />
+                    </div>
+                    <div className={`absolute inset-0 z-10 pointer-events-none transition-all duration-1000 ${isWishSlide ? 'seamless-overlay dark-mode' : 'seamless-overlay'}`}></div>
+
+                    <div className="relative z-20 h-full w-full lg:w-[55%] flex flex-col">
+                        <div className="p-6 md:p-8 flex justify-end items-center">
+                            <button onClick={(e) => { e.stopPropagation(); if(isPlaying){audioRef.current.pause(); setIsPlaying(false);} else {audioRef.current.play(); setIsPlaying(true);} }} className={`p-2.5 rounded-full backdrop-blur shadow-sm hover:scale-110 transition theme-transition ${isWishSlide ? 'bg-white/20 text-white' : 'bg-white/40 text-gray-800'}`} style={{ color: isWishSlide ? 'white' : theme.primary }}>
+                                {isPlaying ? <div className="flex gap-0.5 h-3 items-end"><div className="music-bar w-0.5"></div><div className="music-bar w-0.5"></div><div className="music-bar w-0.5"></div></div> : <Icon name="play" size={14} />}
+                            </button>
+                        </div>
+                        <div className="flex-1 relative overflow-visible flex flex-col justify-center cursor-pointer">
+                            <div key={currentSlide} className="h-full w-full">
+                                {currentData.type === 'intro' && <IntroSlide onStart={nextSlide} theme={theme} onSecretTrigger={() => { const c = secretCount + 1; setSecretCount(c); if(c>=5){ setShowUpload(true); setSecretCount(0); } }} />}
+                                {currentData.type === 'month' && <MonthSlide data={currentData} theme={theme} />}
+                                {currentData.type === 'letter' && <LetterSlide theme={theme} />}
+                                {currentData.type === 'wish' && <WishSlide theme={theme} isAdmin={showUpload} />}
+                            </div>
+                        </div>
+                    </div>
+
+                    {showUpload && (
+                        <div className="absolute top-6 right-6 z-50 animate-pop-in upload-zone" onClick={(e) => e.stopPropagation()}>
+                            <button onClick={() => setIsLinkModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md border border-white/40 text-white rounded-full hover:bg-white/30 transition shadow-lg group">
+                                <Icon name="link" size={16} /><span className="text-xs font-bold tracking-wider uppercase">Set Global BG URL: {currentSlide}</span>
+                            </button>
+                        </div>
+                    )}
+
+                    {isLinkModalOpen && (
+                        <div className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                            <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl animate-pop-in border border-white/20">
+                                <h3 className="text-lg font-bold text-gray-800 mb-2">Background URL Sync</h3>
+                                <p className="text-xs text-gray-400 mb-4 uppercase tracking-widest font-bold">Paste URL to update all users</p>
+                                <input type="text" className="w-full p-4 bg-gray-50 rounded-xl mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 text-gray-800 border border-gray-100" placeholder="https://..." value={urlInput} onChange={(e) => setUrlInput(e.target.value)} />
+                                <div className="flex gap-2">
+                                    <button onClick={() => setIsLinkModalOpen(false)} className="flex-1 py-3 text-xs font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition">CANCEL</button>
+                                    <button onClick={saveImageUrl} className="flex-1 py-3 text-xs font-bold text-white rounded-xl shadow-lg bg-gray-900 hover:bg-black transition uppercase tracking-widest">SAVE SYNC</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className={`absolute bottom-8 right-8 z-20 flex items-center gap-3 backdrop-blur-sm px-4 py-2 rounded-full transition-colors ${isWishSlide ? 'bg-white/10 text-white/80' : 'bg-black/10 text-white/80'}`}>
+                        <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-green-400 animate-pulse' : 'bg-white'}`}></div>
+                        <span className="text-xs font-bold tracking-widest uppercase text-shadow-sm">{BGM.title} - {BGM.artist}</span>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
