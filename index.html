@@ -3,806 +3,803 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LMSY 2025 · Memory Log</title>
+    <title>LMSY Memory 2025</title>
     
-    <!-- 1. Tailwind CSS -->
+    <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 2. React & ReactDOM -->
+    <!-- 引入 React 和 ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    <!-- 3. Babel -->
+    <!-- 引入 Babel 用于解析 JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- 4. Color Thief -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
+    <!-- 引入 LeanCloud Storage SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
 
-    <!-- 5. Firebase -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        window.FirebaseSDK = { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, doc, setDoc, getDoc, collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp, increment };
-    </script>
+    <!-- 字体配置 -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-    <!-- Tailwind Config -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'lmsy-blue': '#A3D8F4',
-                        'lmsy-pink': '#F4A3C6',
-                        'lmsy-dark': '#2D3748',
-                    },
-                    fontFamily: {
-                        serif: ['"Playfair Display"', 'serif'],
-                        sans: ['"Inter"', 'sans-serif'],
-                        mono: ['"Space Mono"', 'monospace'],
-                    },
-                    animation: {
-                        'page-turn': 'pageTurn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-                        'fade-in': 'fadeIn 0.5s ease-out forwards',
-                        'fade-out': 'fadeOut 0.5s ease-in forwards',
-                        'star-twinkle': 'starTwinkle 3s ease-in-out infinite',
-                        'pop-in': 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-                        'float': 'float 6s ease-in-out infinite',
-                        'pulse-guide': 'pulseGuide 2s infinite',
-                    },
-                    keyframes: {
-                        pageTurn: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        },
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        fadeOut: {
-                            '0%': { opacity: '1' },
-                            '100%': { opacity: '0' },
-                        },
-                        popIn: {
-                            '0%': { opacity: '0', transform: 'scale(0.5)' },
-                            '100%': { opacity: '1', transform: 'scale(1)' },
-                        },
-                        starTwinkle: {
-                            '0%, 100%': { opacity: '0.6', transform: 'scale(1)' },
-                            '50%': { opacity: '1', transform: 'scale(1.2)' },
-                        },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-10px)' },
-                        },
-                        pulseGuide: {
-                            '0%, 100%': { opacity: '0.8', transform: 'scale(1)' },
-                            '50%': { opacity: '0.4', transform: 'scale(0.95)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- Fonts & Styles -->
+    <!-- 样式补充 -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&family=Space+Mono:wght@700&display=swap');
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #F9F9F7; }
+        .font-header { font-family: 'Playfair Display', serif; }
+        .font-body { font-family: 'Noto Sans SC', sans-serif; }
+        .font-sans { font-family: 'Noto Sans SC', sans-serif; }
+        .antialiased { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        .shadow-glow { filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)); }
         
-        body { 
-            -webkit-tap-highlight-color: transparent; 
-            user-select: none; 
-            margin: 0;
-            overflow: hidden;
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-        }
-
-        .seamless-overlay {
-            background: linear-gradient(to right, 
-                rgba(255, 255, 255, 0.98) 0%, 
-                rgba(255, 255, 255, 0.95) 45%, 
-                rgba(255, 255, 255, 0.8) 55%, 
-                rgba(255, 255, 255, 0) 100%);
-            transition: background 1s ease;
-        }
-
-        .seamless-overlay.dark-mode {
-            background: linear-gradient(to right, 
-                rgba(15, 23, 42, 0.98) 0%, 
-                rgba(15, 23, 42, 0.95) 45%, 
-                rgba(15, 23, 42, 0.8) 65%, 
-                rgba(15, 23, 42, 0) 100%);
-        }
-
-        @media (max-width: 1024px) {
-            .seamless-overlay {
-                background: linear-gradient(to bottom, 
-                    rgba(255, 255, 255, 0.98) 0%, 
-                    rgba(255, 255, 255, 0.95) 60%, 
-                    rgba(255, 255, 255, 0) 100%);
-            }
-            .seamless-overlay.dark-mode {
-                background: linear-gradient(to bottom, 
-                    rgba(15, 23, 42, 0.98) 0%, 
-                    rgba(15, 23, 42, 0.95) 60%, 
-                    rgba(15, 23, 42, 0) 100%);
-            }
-        }
-
-        .music-bar {
-            width: 3px;
-            background: currentColor;
-            animation: music-wave 0.8s ease-in-out infinite;
-        }
-        @keyframes music-wave { 0%, 100% { height: 30%; } 50% { height: 100%; } }
-        .music-bar:nth-child(2) { animation-delay: 0.1s; }
-        .music-bar:nth-child(3) { animation-delay: 0.2s; }
-
-        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
-
-        .theme-transition { transition: all 1s cubic-bezier(0.4, 0, 0.2, 1); }
-        .star-item { cursor: pointer; transition: transform 0.3s ease; }
-        .star-item:hover { transform: scale(1.5) rotate(15deg); z-index: 50; }
+        /* 动画定义 */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        
+        .animate-fade-in-up { animation: fadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-shake { animation: shake 0.3s ease-in-out; }
+        
+        /* 隐藏滚动条 */
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef, useMemo } = React;
-
-        // --- Data Configuration ---
-        const BGM = {
-            url: "https://raw.githubusercontent.com/Dmsama2/Music/main/ImYours.mp3", 
-            title: "I'm Yours",
-            artist: "Sonya"
+    <script type="text/babel" data-type="module">
+        // --- 模拟 Lucide 图标 ---
+        const Icons = {
+            Heart: ({className, fill}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={fill || "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>,
+            Send: ({className, size}) => <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+            X: ({className}) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>,
+            Star: ({className, fill, size}) => <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill={fill || "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+            Trash2: ({className, size}) => <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
+            Sparkles: ({className, size}) => <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 5h4"/><path d="M3 9h4"/></svg>,
+            ChevronRight: ({className, size}) => <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>,
+            ChevronLeft: ({className, size}) => <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m15 18-6-6 6-6"/></svg>,
+            // 新增 ChevronUp 用于移动端引导
+            ChevronUp: ({className, size}) => <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m18 15-6-6-6 6"/></svg>,
+            Lock: ({className, size}) => <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         };
-        
-        const DEFAULT_IMAGE = 'https://i.imgur.com/JP6F4PI.jpg'; 
-        
-        // --- STORY DATA (RE-POPULATED WITH ORIGINAL COPY & DETAILED USER DATA) ---
-        const STORY_DATA = [
-            { type: 'intro' },
-            { 
-                type: 'month', monthNum: '03', monthEn: 'MARCH', year: '2025',
-                title: 'Beginning · 故事开始',
-                desc: 'From the first runway to global fan meetings, our story began with excitement.',
-                descCn: '从初次T台到全球见面会，我们的故事在期待中拉开序幕。',
-                stats: { value: '9', unit: 'Activities', label: 'Month Total · 本月活动' },
-                highlight: { tag: '#LMSY1stFMinVN', label: 'Global Tour · 启航' },
-                events: [
-                    { day: '05', title: 'LMSY MINT SUMMER RUNWAY', tag: '#SiamCenterxMintxLMSY' },
-                    { day: '08', title: 'LMSY VIETNAM 1ST FM', tag: '#LMSY1stFMinVN' },
-                    { day: '13', title: 'SHOP TAOBAO WT LMSY', tag: '#LMSY2ndxTaiXiaoXiang' },
-                    { day: '15', title: 'LMSY MANILA 1ST FM', tag: '#LMSY1stFMinManila' },
-                    { day: '15', title: 'Buddy Besties x LMSY', tag: 'Thailand Local Business' },
-                    { day: '22', title: 'PARTY WITH LMSY', tag: '#ArousarxLMSYspringparty' },
-                    { day: '28', title: 'ENJOY TASTY WT LMSY', tag: '#LMSYxPANDATHAIHOUSE2nd' },
-                    { day: '29', title: 'LMSY FANSIGN WT BESTIES', tag: '#BuddyBestiesxPresenterLMSY' },
-                    { day: '30', title: 'HARMONY SECRET FANSIGN', tag: '#BookFair2025xHarmonySecret' }
-                ]
-            },
-            { 
-                type: 'month', monthNum: '04', monthEn: 'APRIL', year: '2025',
-                title: 'Milestones · 突破时刻',
-                desc: 'Celebrating birthdays and first milestones together. The love is growing.',
-                descCn: '共同庆祝生日与初次里程碑，爱意在每一次相聚中生长。',
-                stats: { value: '229.5', unit: 'K', label: 'Engagement · 互动峰值' },
-                highlight: { tag: '#HappySonyaDay', label: 'Birthday · 生日快乐' },
-                events: [
-                    { day: '03', title: 'ENJOY TASTY WT LMSY', tag: '#LMSYxPANDATHAIHOUSE2nd' },
-                    { day: '03', title: 'I HATE MONDAY X LMSY', tag: 'Trend Activity' },
-                    { day: '03', title: '1st MV Launch', tag: 'Participation' },
-                    { day: '05', title: 'LMSY TAIPEI 1ST FM', tag: 'Eng: 173.7K / Heat: 55.7K' },
-                    { day: '11', title: 'LMSY WT TAITIANTIAN', tag: '#LMSYxTaiTianTian' },
-                    { day: '12', title: 'LOTUSS WITH LMSY', tag: 'Eng: 158.5K / Heat: 77K' },
-                    { day: '16', title: 'HS Teaser 5M Views', tag: 'Milestone' },
-                    { day: '18', title: 'Sonya Birthday', tag: 'Eng: 229.5K / Heat: 91.5K' },
-                    { day: '26', title: 'LMSY 1ST FS CHONGQING', tag: 'Eng: 171K / Heat: 64K' }
-                ]
-            },
-            { 
-                type: 'month', monthNum: '05', monthEn: 'MAY', year: '2025',
-                title: 'Anticipation · 满怀期待',
-                desc: 'Awards, fan meetings, and the start of our favorite Thursday ritual.',
-                descCn: '颁奖礼、见面会，还有我们最爱的“周四之约”正式开启。',
-                stats: { value: '220.1', unit: 'K', label: 'Engagement · 互动峰值' },
-                highlight: { tag: '#FittingHarmonySecret', label: 'New Journey · 新旅程' },
-                events: [
-                    { day: '02', title: 'LMSY WT THAIXIAOXIANG', tag: 'Eng: 100K / Heat: 34K' },
-                    { day: '03', title: '#พิฆเนศวรครั้งที่13xLMSY', tag: 'Eng: 170K / Heat: 97K' },
-                    { day: '08', title: 'HS Trailer 6M Views', tag: 'Milestone' },
-                    { day: '14', title: 'LMSY KCL AWARDS 2025', tag: '#คมชัดลึกอวอร์ด21xLMSY' },
-                    { day: '15', title: 'HARMONY SECRET 1st DEAL', tag: '#FittingHarmonySecret' },
-                    { day: '17', title: 'LMSY MACAU 2ND FM', tag: '#LMSYFANMEETINGINMACAU' },
-                    { day: '17', title: 'Thailand 1st Fan Meeting', tag: 'Local Event' },
-                    { day: '16', title: 'HS Fitting Trend', tag: 'Eng: 220.1K / Heat: 67.7K' },
-                    { day: '18', title: 'Macau FM Trend', tag: 'Eng: 145.1K / Heat: 73.8K' },
-                    { day: '20', title: 'LMSYxZHENJICOFFEE', tag: 'Eng: 83.7K / Heat: 27.7K' },
-                    { day: '22', title: 'Secret Vlog Official Launch', tag: 'Every Thursday' },
-                    { day: '24', title: 'CAMBODIA 1ST FM', tag: 'Eng: 190.3K / Heat: 76.1K' },
-                    { day: '29', title: 'SECRET VLOG EP2', tag: 'Eng: 78.9K / Heat: 44K' }
-                ]
-            },
-            { 
-                type: 'month', monthNum: '06', monthEn: 'JUNE', year: '2025',
-                title: 'Milestone · 荣耀进阶',
-                desc: 'Breaking records and reaching new heights. 400K is just the beginning.',
-                descCn: '打破纪录，攀登高峰。40万粉丝仅仅是个开始。',
-                stats: { value: '294', unit: 'K', label: 'Engagement · 互动峰值' },
-                highlight: { tag: '#บวงสรวงHarmonySecret', label: 'Buzz · 热度爆发' },
-                events: [
-                    { day: '05', title: 'SECRET VLOG EP3', tag: 'Eng: 60.9K / Heat: 42.6K' },
-                    { day: '11', title: 'WORSHIP HARMONY SECRET', tag: 'Heat: 182.9K / Eng: 294K' },
-                    { day: '12', title: 'SECRET VLOG EP4', tag: 'Eng: 44.3K / Heat: 39.6K' },
-                    { day: '13', title: 'LMSY MIDATO LIVE', tag: 'Eng: 94.9K / Heat: 107.6K' },
-                    { day: '15', title: '400K IG LOOKMHEE', tag: 'Eng/Heat > 100K' },
-                    { day: '19', title: 'SECRET VLOG EP5', tag: 'Eng: 26.9K / Heat: 28K' },
-                    { day: '24', title: 'SONYA GROWTH 400K', tag: 'Eng: 66.9K / Heat: 118.9K' },
-                    { day: '28', title: 'LMSY X BABIBLUSHING SH', tag: 'Eng: 71.4K / Heat: 32.7K' },
-                    { day: '26', title: 'SECRET LIVE LMSY', tag: 'Eng: 135.2K / Heat: 37.6K' },
-                    { day: '28', title: 'HS TEASER LAUNCH', tag: 'Eng: 236K / Heat: 162.6K' }
-                ]
-            },
-            { 
-                type: 'month', monthNum: '07', monthEn: 'JULY', year: '2025',
-                title: 'Premiere · 盛夏热映',
-                desc: 'The series premiere we waited for. The screens lit up with our pride.',
-                descCn: '期待已久的剧集首映。屏幕亮起的那一刻，满是我们的骄傲。',
-                stats: { value: '264.8', unit: 'K', label: 'Engagement · 互动峰值' },
-                highlight: { tag: '#AsiaTopAwards2025xLMSY', label: 'Awards Night · 颁奖礼' },
-                events: [
-                    { day: '01', title: 'HS PREMIER TICKETING', tag: '#เปิดศึกเบสตี้ชิงบัตรดีลลับ' },
-                    { day: '01', title: 'HS Teaser 7M Views', tag: 'Milestone' },
-                    { day: '03', title: 'SECRET VLOG EP7', tag: 'Eng: 48.9K / Heat: 21.2K' },
-                    { day: '05', title: 'LIVE COCONUT WT LMSY', tag: 'Eng: 88.8K / Heat: 55.8K' },
-                    { day: '10', title: 'SECRET VLOG EP8', tag: 'Eng: 86.6K / Heat: 57.7K' },
-                    { day: '14', title: 'OST: Secret Deal Launch', tag: 'Major Streaming' },
-                    { day: '14', title: 'OUR SECRET DEAL TREND', tag: 'Eng: 38.4K / Heat: 24.6K' },
-                    { day: '14', title: 'HS TRAILER TREND', tag: 'Eng: 260.3K / Heat: 83.5K' },
-                    { day: '19', title: 'LMSY YURI BEST ACTRESS', tag: 'Eng: 264.8K / Heat: 102.2K' },
-                    { day: '17', title: 'SECRET VLOG EP9', tag: 'Eng: 48.7K / Heat: 19.3K' },
-                    { day: '21', title: 'ONLY WE KNOW LAUNCH', tag: 'Eng: 45.5K / Heat: 25.5K' },
-                    { day: '24', title: 'HS SECRET MEETING', tag: '#รวมพลSecretDeal' },
-                    { day: '26', title: 'Harmony Secret On Air', tag: 'Series Launch' }
-                ]
-            },
-            { 
-                type: 'month', monthNum: '08', monthEn: 'AUGUST', year: '2025',
-                title: 'Phenomenon · 现象级',
-                desc: 'Explosive engagement. 1.7 Million interactions proved our power.',
-                descCn: '现象级的热度。170万次互动，证明了我们共同的力量。',
-                stats: { value: '1.7', unit: 'M', label: 'Engagement · 年度最高' },
-                highlight: { tag: '#HarmonySecretEP5', label: 'Viral · 全网热议' },
-                events: [
-                    { day: '02', title: 'SECRET DEAL EP2', tag: 'Eng: 867.9K / Heat: 328.3K' },
-                    { day: '07', title: '1ST SECRET MEETING', tag: 'Eng: 195.4K / Heat: 88.9K' },
-                    { day: '07', title: 'SECRET DEAL AT EFM', tag: 'Eng: 131.5K / Heat: 60.6K' },
-                    { day: '09', title: 'SECRET DEAL EP3', tag: 'Eng: 687.7K / Heat: 326.2K' },
-                    { day: '16', title: 'SECRET DEAL EP4', tag: 'Eng: 899.7K / Heat: 549.2K' },
-                    { day: '13', title: 'SECRET REACTION EP3', tag: 'Eng: 188K / Heat: 34.9K' },
-                    { day: '16', title: '#WeiboxLMSY Night', tag: 'Eng: 291.5K / Heat: 65.8K' },
-                    { day: '18', title: '1ST PRESS TOUR HS', tag: '#HarmonySecret_Presstour' },
-                    { day: '23', title: 'SECRET DEAL EP5', tag: 'Eng: 1.7M / Heat: 1.1M' },
-                    { day: '20', title: 'SECRET REACTION EP4', tag: 'Eng: 122.7K / Heat: 21.5K' },
-                    { day: '30', title: 'SECRET DEAL EP6', tag: 'Eng: 1.1M / Heat: 1.2M' },
-                    { day: '29', title: 'LMSY SAVAGE ROSES', tag: '#LMSYxKOHIOK' },
-                    { day: '28', title: 'LMSY IG 500K Fans', tag: 'Milestone' }
-                ]
-            },
-            { 
-                type: 'month', monthNum: '09', monthEn: 'SEPTEMBER', year: '2025',
-                title: 'Climax · 璀璨巅峰',
-                desc: 'The grand finale. Tears, joy, and the highest record ever.',
-                descCn: '盛大的终章。泪水与欢笑交织，创下年度最高的230万记录。',
-                stats: { value: '2.3', unit: 'M', label: 'Engagement · 互动巅峰' },
-                highlight: { tag: '#HarmonySecretFinalEP', label: 'Grand Finale · 完美收官' },
-                events: [
-                    { day: '05', title: '2ND PRESS TOUR HS', tag: '#HarmonySecret_Presstour' },
-                    { day: '06', title: 'SECRET DEAL EP7', tag: 'Eng: 1.2M / Heat: 1M' },
-                    { day: '05', title: 'POND’S MIRACLE SECRET', tag: 'Heat: 23.2K / Eng: 83.2K' },
-                    { day: '05', title: 'GROWING TOGETHER', tag: 'Heat: 44.6K / Eng: 159.5K' },
-                    { day: '05', title: 'WHOSTHAT X LMSY', tag: 'Heat: 10K / Eng: 40.7K' },
-                    { day: '08', title: 'LMSY DEEP TALK', tag: 'Eng: 232.9K / Heat: 46.7K' },
-                    { day: '09', title: 'LMSY SHINING 500K', tag: 'Heat: 20.6K / Eng: 65.8K' },
-                    { day: '10', title: 'SECRET REACTION EP7', tag: 'Heat: 16.5K / Eng: 104.1K' },
-                    { day: '13', title: 'HS FINAL EP MEETING', tag: 'Heat: 1.7M / Eng: 2.3M' },
-                    { day: '15', title: 'EFW2025 PRESS CON', tag: 'Heat: 109.9K / Eng: 348.3K' },
-                    { day: '17', title: 'SECRET REACTION EP8', tag: 'Heat: 102.1K / Eng: 141.7K' },
-                    { day: '21', title: 'MACAU 3RD FM', tag: 'Heat: 303.1K / Eng: 469.5K' },
-                    { day: '23', title: 'YENT AWARDS 2025', tag: 'Heat: 307.2K / Eng: 630K' },
-                    { day: '26', title: 'DREAM WT LMSY', tag: 'Heat: 56.8K / Eng: 171.7K' }
-                ]
-            },
-            { 
-                type: 'month', monthNum: '10', monthEn: 'OCTOBER', year: '2025',
-                title: 'Devotion · 坚定奔赴',
-                desc: 'From Nanning to Hong Kong, filling every venue with love.',
-                descCn: '从南宁到香港，我们用爱填满每一个场馆。',
-                stats: { value: '427.6', unit: 'K', label: 'Engagement · 秀场热度' },
-                highlight: { tag: '#SiamParagonBIFW2025xLMSY', label: 'Fashion Icon · 秀场' },
-                events: [
-                    { day: '04', title: 'LOOKMHEE NANNING 2ND FM', tag: 'Heat: 58.3K / Eng: 180.6K' },
-                    { day: '04', title: 'SONYA FM NANNING 2ND', tag: 'Heat: 58.4K / Eng: 162.2K' },
-                    { day: '11', title: 'LMSY BELOVED IN HK', tag: 'Heat: 331.6K / Eng: 317.2K' },
-                    { day: '16', title: 'LMSY AT SIAM PARAGON', tag: 'Heat: 250.3K / Eng: 427.6K' }
-                ]
-            },
-            { 
-                type: 'month', monthNum: '11', monthEn: 'NOVEMBER', year: '2025',
-                title: 'Accomplishment · 收获满满',
-                desc: 'Awards and new milestones. Walking side by side into the light.',
-                descCn: '奖项与新里程碑。并肩同行，走向更耀眼的光芒。',
-                stats: { value: '318.5', unit: 'K', label: 'Engagement · 互动峰值' },
-                highlight: { tag: '#HOWEAWARDS2025XLMSY', label: 'Awards Night · 颁奖礼' },
-                events: [
-                    { day: '01', title: 'LMSY FOAMDREAM PARTY', tag: 'Heat: 55.3K / Eng: 192.2K' },
-                    { day: '05', title: 'LMSY AT IN THE 8IGHT', tag: 'Heat: 130.2K / Eng: 253.7K' },
-                    { day: '07', title: 'LMSY AT IQIYI IJOY', tag: 'Heat: 230.1K / Eng: 277.2K' },
-                    { day: '06', title: 'SY Egypt Fans 600K', tag: 'Followers Milestone' },
-                    { day: '10', title: 'SONYASARANN 600K IG', tag: 'Heat: 53.3K / Eng: 60.8K' },
-                    { day: '12', title: 'LMSY AT HOWE AWARDS', tag: 'Heat: 205.3K / Eng: 318.5K' },
-                    { day: '16', title: 'Lookmhee IG 600K', tag: 'Followers Milestone' },
-                    { day: '14', title: 'LMSY EFW2025 MOMENT', tag: '#EFW2025xLMSY #SOCIALBUZZ' },
-                    { day: '23', title: 'LMSY SIP THE VIBE LIVE', tag: 'Heat: 68.8K / Eng: 116.3K' },
-                    { day: '22', title: 'SY TK 600K Fans', tag: 'Milestone' },
-                    { day: '29', title: 'LM WUHAN FANSIGN', tag: '#LOOKMHEExFirstFansignWuHan' },
-                    { day: '30', title: 'SY WUHAN FANSIGN', tag: '#SONYAxFirstFansignWuHan' }
-                ]
-            },
-            { 
-                type: 'month', monthNum: '12', monthEn: 'DECEMBER', year: '2025',
-                title: 'Conclusion · 岁末华章',
-                desc: 'Closing the year with prestigious awards and international recognition.',
-                descCn: '以年度荣誉与海外认可为这一年画上完美句点，感恩每一份支持。',
-                stats: { value: '424.5', unit: 'K', label: 'Engagement · 互动峰值' },
-                highlight: { tag: '#PersonOfTheYearAwards2025xLMSY', label: 'Awards · 年度荣誉' },
-                events: [
-                    { day: '11', title: 'EFW2025 TRENDS', tag: 'Results: 111.1K / Eng: 424.5K' },
-                    { day: '11', title: 'LMSY SOCIAL BUZZ', tag: 'Results: 48.8K / Eng: 136.9K' },
-                    { day: '11', title: 'LMSY x NICHP', tag: 'Results: 55.3K / Eng: 239.3K' },
-                    { day: '11', title: 'LMSY EFW MOMENT', tag: 'Results: 105.5K / Eng: 397.9K' },
-                    { day: '14', title: 'LMSY 1ST FM IN SG', tag: 'Heat: 169.9K / Eng: 258.5K' },
-                    { day: '16', title: 'Thailand Headline AWARDS', tag: 'Heat: 175.4K / Eng: 330.8K' },
-                    { day: '20', title: 'WINTER WHISPERS LM', tag: 'Heat: 76.2K / Eng: 97.9K' },
-                    { day: '21', title: 'SY 1ST FM FUZHOU', tag: 'Heat: 74.9K / Eng: 147.7K' },
-                    { day: '27', title: 'MYSTIC ROMANCE LM', tag: 'Christmas Night' }
-                ]
-            },
-            { type: 'letter' },
-            { type: 'wish' }
+
+        const { useState, useEffect, useRef } = React;
+
+        // --- LeanCloud 初始化 ---
+        // 使用用户提供的 Key 和 Server URL
+        AV.init({
+            appId: "K7xo2OxHrIKuUlarfWeQ82A6-gzGzoHsz",
+            appKey: "edgBWvdj573gkIGv7uUUYP9f",
+            serverURL: "https://k7xo2oxh.lc-cn-n1-shared.com"
+        });
+
+        // --- 文案与数据 ---
+        const PAGES_DATA = [
+        {
+            type: 'cover',
+            bg: 'https://raw.githubusercontent.com/Dmsama2/qx/main/%E5%B0%81%E9%9D%A2%E5%9B%BE.jpg',
+            title: '2025',
+            subtitle: 'Memory Lane',
+            desc: '从 3 月起航，\n记录我们共同经历的点滴。',
+            descEn: 'Sailing from March,\nrecording every precious moment we shared.'
+        },
+        {
+            month: 'March',
+            zh: '3月 · 初见',
+            en: 'March · The Encounter',
+            summary: '从初次T台到全球见面会，我们的故事在期待中拉开序幕。',
+            summaryEn: 'From the first runway to global fan meetings, our story began with excitement.',
+            bg: 'https://raw.githubusercontent.com/Dmsama2/qx/main/03.png',
+            activities: [
+            { date: '3.05', zh: 'LMSY MINT SUMMER RUNWAY', en: 'LMSY MINT SUMMER RUNWAY #SiamCenterxMintxLMSY' },
+            { date: '3.08', zh: 'LMSY 越南首次 FM', en: 'LMSY VIETNAM 1ST FM #LMSY1stFMinVN' },
+            { date: '3.13', zh: '淘宝直播 WT LMSY', en: 'SHOP TAOBAO WT LMSY #LMSY2ndxTaiXiaoXiang' },
+            { date: '3.15', zh: '马尼拉首次 FM', en: 'LMSY MANILA 1ST FM #LMSY1stFMinManila' },
+            { date: '3.15', zh: '泰国本土商务 Buddy Besties x LMSY', en: 'Buddy Besties x LMSY in Thailand' },
+            { date: '3.22', zh: 'PARTY WITH LMSY 春季派对', en: 'PARTY WITH LMSY #ArousarxLMSYspringparty' },
+            { date: '3.28', zh: 'ENJOY TASTY WT LMSY', en: 'ENJOY TASTY WT LMSY #LMSYxPANDATHAIHOUSE2nd' },
+            { date: '3.29', zh: 'LMSY FANSIGN WT BESTIES', en: 'LMSY FANSIGN WT BESTIES #BuddyBestiesxPresenterLMSY' },
+            { date: '3.30', zh: 'HARMONY SECRET 签售会', en: 'HARMONY SECRET FANSIGN #BookFair2025xHarmonySecret' }
+            ]
+        },
+        {
+            month: 'April',
+            zh: '4月 · 萌芽',
+            en: 'April · Sprouting',
+            summary: '共同庆祝生日与初次里程碑，爱意在每一次相聚中生长。',
+            summaryEn: 'Celebrating birthdays and first milestones together. The love is growing.',
+            bg: 'https://raw.githubusercontent.com/Dmsama2/qx/main/04.png',
+            activities: [
+            { date: '4.03', zh: 'ENJOY TASTY WT LMSY', en: 'ENJOY TASTY WT LMSY #LMSYxPANDATHAIHOUSE2nd' },
+            { date: '4.03', zh: 'I HATE MONDAY X LMSY', en: 'I HATE MONDAY X LMSY' },
+            { date: '4.03', zh: '首次参与的 MV 正式上线', en: 'First MV participation officially launched' },
+            { date: '4.05', zh: '台北首次 FM (数据 1737K)', en: 'LMSY TAIPEI 1ST FM (Engagement 1737K, Heat 55.7K)' },
+            { date: '4.11', zh: 'LMSY WT TAITIANTIAN', en: 'LMSY WT TAITIANTIAN #LMSYxTaiTianTian' },
+            { date: '4.12', zh: 'LOTUSS WITH LMSY (参与度 158.5k)', en: 'LOTUSS WITH LMSY (Engagement 158.5k, Heat 77k)' },
+            { date: '4.16', zh: 'HarmonySecret 先导预告播放量破 500 万', en: 'HarmonySecret Teaser reached 5M views' },
+            { date: '4.18', zh: 'Sonya 生日趋势结束 (参与度 229.5K)', en: 'Sonya Birthday Trend (Engagement 229.5K, Heat 91.5K)' },
+            { date: '4.26', zh: '重庆首次签售会 (参与度 171K)', en: 'LMSY 1ST FS CHONGQING (Engagement 171K, Heat 64K)' }
+            ]
+        },
+        {
+            month: 'May',
+            zh: '5月 · 繁花',
+            en: 'May · Blossoms',
+            summary: '颁奖礼、见面会，还有我们最爱的“周四之约”正式开启。',
+            summaryEn: 'Awards, fan meetings,  And our favorite thursday show began.',
+            bg: 'https://raw.githubusercontent.com/Dmsama2/qx/main/05.png',
+            activities: [
+            { date: '5.02', zh: 'LMSY WT THAIXIAOXIANG', en: 'LMSY WT THAIXIAOXIANG (Engagement 100K)' },
+            { date: '5.03', zh: '第 13 届 Pikanesuan 颁奖礼', en: '13th Pikanesuan Awards x LMSY' },
+            { date: '5.08', zh: 'HarmonySecret 预告播放量破 600 万', en: 'HarmonySecret Teaser reached 6M views' },
+            { date: '5.14', zh: 'LMSY KCL AWARDS 2025', en: 'LMSY KCL AWARDS 2025 #KomChadLuekAward21' },
+            { date: '5.15', zh: 'HARMONY SECRET 1st DEAL 试装', en: 'HARMONY SECRET 1st DEAL Fitting' },
+            { date: '5.17', zh: '泰国首次粉丝见面会', en: 'First Fan Meeting in Thailand' },
+            { date: '5.18', zh: '澳门粉丝见面会 (参与度 145.1K)', en: 'Macau Fan Meeting (Engagement 145.1K, Heat 73.8K)' },
+            { date: '5.20', zh: 'LMSY x ZHENJI COFFEE', en: 'LMSY x ZHENJI COFFEE (Engagement 83.7K)' },
+            { date: '5.22', zh: '综艺 Secret Vlog 正式上线', en: 'Variety Show: Secret Vlog officially launched, updates every Thursday' },
+            { date: '5.24', zh: '柬埔寨首次 FM (参与度 190.3K)', en: 'LMSY CAMBODIA 1ST FM (Engagement 190.3K)' },
+            { date: '5.29', zh: 'Secret Vlog EP2 (参与度 78.9K)', en: 'LMSY SECRET VLOG EP2 (Engagement 78.9K)' }
+            ]
+        },
+        {
+            month: 'June',
+            zh: '6月 · 盛夏',
+            en: 'June · Summer Solstice',
+            summary: '打破纪录，攀登高峰。40万粉丝仅仅是个开始。',
+            summaryEn: 'Breaking records and reaching new heights. 400K is just the beginning.',
+            bg: 'https://raw.githubusercontent.com/Dmsama2/qx/main/06.png',
+            activities: [
+            { date: '6.05', zh: 'Secret Vlog EP3', en: 'SECRET VLOG EP3 (Heat 42.6K)' },
+            { date: '6.11', zh: 'WORSHIP HARMONY SECRET', en: 'WORSHIP HARMONY SECRET (Engagement 294K)' },
+            { date: '6.12', zh: 'Secret Vlog EP4', en: 'SECRET VLOG EP4 #SecretVlogLMSY_EP4' },
+            { date: '6.13', zh: 'LMSY MIDATO LIVE', en: 'LMSY MIDATO LIVE (Heat 107.6K)' },
+            { date: '6.15', zh: 'Lookmhee IG 突破 400K 粉丝', en: 'Lookmhee reached 400K IG followers' },
+            { date: '6.19', zh: 'Secret Vlog EP5', en: 'SECRET VLOG EP5 #SecretVlogLMSY_EP5' },
+            { date: '6.24', zh: 'Sonya IG 突破 400K 粉丝', en: 'Sonya reached 400K IG followers' },
+            { date: '6.26', zh: 'LMSY SECRET LIVE', en: 'LMSY SECRET LIVE (Engagement 135.2K)' },
+            { date: '6.28', zh: '上海分享会 #BaBiBlushing', en: 'LMSY Sharing Event in Shanghai #BaBiBlushing' },
+            { date: '6.28', zh: 'HarmonySecret 正式预告片上线', en: 'HarmonySecret Official Teaser launched' }
+            ]
+        },
+        {
+            month: 'July',
+            zh: '7月 · 灿烂',
+            en: 'July · Radiance',
+            summary: '期待已久的剧集首映。屏幕亮起的那一刻，满是我们的骄傲。',
+            summaryEn: 'The long-awaited series premiere. The screens lit up with our pride.',
+            bg: 'https://raw.githubusercontent.com/Dmsama2/qx/main/07.jpg',
+            activities: [
+            { date: '7.01', zh: 'HARMONY SECRET 首映派对', en: 'HARMONY SECRET PREMIER #SecretDeal' },
+            { date: '7.01', zh: '预告片播放量突破 700 万', en: 'Teaser views surpassed 7 million' },
+            { date: '7.03', zh: 'Secret Vlog EP7', en: 'SECRET VLOG EP7 #SecretVlogLMSY_EP7' },
+            { date: '7.05', zh: 'LIVE COCONUT WITH LMSY', en: 'LIVE COCONUT WITH LMSY #COCONUTxLMSY' },
+            { date: '7.10', zh: 'Secret Vlog EP8 (参与度 86.6K)', en: 'SECRET VLOG EP8 (Engagement 86.6K)' },
+            { date: '7.14', zh: '主题曲 Secret Deal 上线流媒体', en: 'Theme Song "Secret Deal" launched on all platforms' },
+            { date: '7.14', zh: '剧集预告 (参与度 260K)', en: 'HARMONY SECRET TRAILER (Engagement 260K)' },
+            { date: '7.19', zh: '亚洲顶级大奖最佳女演员', en: 'LMSY YURI BEST ACTRESS #AsiaTopAwards2025' },
+            { date: '7.21', zh: 'HarmonySecret 另一首主题曲上线', en: 'Another HarmonySecret Theme Song launched' },
+            { date: '7.24', zh: 'SECRET DEAL 秘密见面会', en: 'SECRET DEAL SECRET MEETING' },
+            { date: '7.26', zh: 'HarmonySecret 正式上线播出', en: 'HarmonySecret officially premiered' }
+            ]
+        },
+        {
+            month: 'August',
+            zh: '8月 · 恒温',
+            en: 'August · Steady Warmth',
+            summary: '现象级的热度。170万次互动，证明了我们共同的力量。',
+            summaryEn: 'Explosive engagement. 1.7 Million interactions proved our power.',
+            bg: 'https://raw.githubusercontent.com/Dmsama2/qx/main/08.jpg',
+            activities: [
+            { date: '8.02', zh: '剧集 EP2 (参与度 867.9K)', en: 'HarmonySecret EP2 (Engagement 867.9K)' },
+            { date: '8.07', zh: '首次秘密见面会', en: '1ST SECRET MEETING (Engagement 195.4K)' },
+            { date: '8.07', zh: 'SECRET DEAL AT EFM', en: 'SECRET DEAL AT EFM #LMSYxEFMFANDOM' },
+            { date: '8.09', zh: '剧集 EP3 (参与度 687.7K)', en: 'HarmonySecret EP3 (Engagement 687.7K)' },
+            { date: '8.13', zh: '剧集反应 EP3', en: 'HarmonySecret Reaction EP3 (Engagement 188K)' },
+            { date: '8.16', zh: '剧集 EP4 (参与度 899.7K)', en: 'HarmonySecret EP4 (Engagement 899.7K)' },
+            { date: '8.16', zh: '微博文化之夜', en: 'Weibo Cultural Exchange Night 2025' },
+            { date: '8.18', zh: '首次剧集媒体巡访 #Presstour', en: 'First Press Tour: HarmonySecret Deal' },
+            { date: '8.23', zh: '剧集 EP5 (参与度 1.7M)', en: 'HarmonySecret EP5 (Engagement 1.7M)' },
+            { date: '8.30', zh: '剧集 EP6 (参与度 1.1M)', en: 'HarmonySecret EP6 (Engagement 1.1M)' },
+            { date: '8.28', zh: 'LMSY IG 粉丝数突破 500K', en: 'LMSY reached 500K IG followers' }
+            ]
+        },
+        {
+            month: 'September',
+            zh: '9月 · 辉煌',
+            en: 'September · Shining',
+            summary: '盛大的终章。泪水与欢笑交织，创下年度最高纪录。',
+            summaryEn: 'The grand finale. Tears, joy, and the highest record ever.',
+            bg: 'https://raw.githubusercontent.com/Dmsama2/qx/main/09.png',
+            activities: [
+            { date: '9.05', zh: '媒体巡访 / POND’S 商务活动', en: '2nd Press Tour / POND’S Miracle Secret x LMSY' },
+            { date: '9.06', zh: '剧集 EP7 (参与度 1.2M)', en: 'HarmonySecret EP7 (Engagement 1.2M)' },
+            { date: '9.08', zh: 'LMSY DEEP TALK', en: 'LMSY DEEP TALK #DearMyselfxLMSY' },
+            { date: '9.13', zh: 'EP8 大结局终映 (参与度 2.3M)', en: 'HarmonySecret FINAL EP (Engagement 2.3M)' },
+            { date: '9.15', zh: 'EFW2025 时尚发布会', en: 'EFW2025 PressCon x LMSY' },
+            { date: '9.21', zh: '澳门第 3 次 FM', en: 'LMSY 3rd FM in Macau (Engagement 469.5K)' },
+            { date: '9.23', zh: 'Y-Entertain 颁奖礼', en: 'Y-Entertain Awards 2025 x LMSY' },
+            { date: '9.26', zh: 'DREAM WT LMSY 直播', en: 'DREAM WT LMSY #LMSYliveFoamDream' }
+            ]
+        },
+        {
+            month: 'October',
+            zh: '10月 · 斑斓',
+            en: 'October · Iridescent',
+            summary: '从南宁到香港，我们用爱填满每一个场馆。',
+            summaryEn: 'From Nanning to Hong Kong, filling every venue with love.',
+            bg: 'https://raw.githubusercontent.com/Dmsama2/qx/main/10.png',
+            activities: [
+            { date: '10.04', zh: 'Lookmhee & Sonya 南宁 FM', en: 'Lookmhee & Sonya 2nd FM in Nanning' },
+            { date: '10.11', zh: '香港 FM (参与度 317.2K)', en: 'LMSY Fan Meeting in Hong Kong 2025' },
+            { date: '10.16', zh: 'SIAM PARAGON 时尚秀', en: 'Siam Paragon BIFW 2025 x LMSY' },
+            { date: '10.25', zh: 'Sonya x 万圣节 Hikaru', en: 'Sonya x Halloween Hikaru #HIKARUxSONYA' }
+            ]
+        },
+        {
+            month: 'November',
+            zh: '11月 · 沉淀',
+            en: 'November · Serenity',
+            summary: '奖项与新里程碑。并肩同行，走向更耀眼的光芒。',
+            summaryEn: 'Awards and new milestones. Walking side by side into the light.',
+            bg: 'https://raw.githubusercontent.com/Dmsama2/qx/main/11.png',
+            activities: [
+            { date: '11.01', zh: 'FOAMDREAM PARTY', en: 'LMSY Foam Dream Party' },
+            { date: '11.05', zh: 'IN THE 8IGHT 活动', en: 'LMSY AT IN THE 8IGHT #InThe8ightxLMSY' },
+            { date: '11.07', zh: '爱奇艺 iJOY TH 2026', en: 'IQIYI iJOY TH 2026 x LMSY' },
+            { date: '11.10', zh: 'Sonya IG 突破 600K 粉丝', en: 'Sonya reached 600K IG followers' },
+            { date: '11.12', zh: 'HOWE AWARDS 2025', en: 'HOWE AWARDS 2025 XLMSY' },
+            { date: '11.16', zh: 'Lookmhee IG 突破 600K 粉丝', en: 'Lookmhee reached 600K IG followers' },
+            { date: '11.14', zh: 'EFW2025 高光时刻', en: 'LMSY EFW2025 MOMENT #LMSYxSOCIALBUZZ' },
+            { date: '11.23', zh: 'SIP THE VIBE 直播', en: 'LMSY SIP THE VIBE LIVE' },
+            { date: '11.29', zh: 'Lookmhee 武汉首次签售会', en: 'Lookmhee 1st Fansign in Wuhan' },
+            { date: '11.30', zh: 'Sonya 武汉首次签售会', en: 'Sonya 1st Fansign in Wuhan' }
+            ]
+        },
+        {
+            month: 'December',
+            zh: '12月 · 温暖',
+            en: 'December · Warmth',
+            summary: '用新加坡的热浪和福州的拥抱，为 2025 画上句号。冬日浪漫之夜，是我们给这一年最温柔的告别。明年见，bestie。',
+            summaryEn: 'Wrapping up 2025 with Singapore heat and Fuzhou hugs. A mystic romantic night, our gentlest farewell to this year. See you in 2026, bestie.',
+            bg: 'https://raw.githubusercontent.com/Dmsama2/qx/main/12.jpg',
+            activities: [
+            { date: '12.11', zh: 'EFW2025 时尚盛典', en: 'EFW2025 x LMSY (Engagement 424.5K)' },
+            { date: '12.11', zh: 'LMSY x NICH P 商务趋势', en: 'LMSY x NICH P (Engagement 239.3K)' },
+            { date: '12.14', zh: '新加坡首次 FM', en: 'LMSY 1ST FM IN SINGAPORE' },
+            { date: '12.16', zh: '泰国头条颁奖礼', en: 'Thailand Headlines Person Of The Year Awards' },
+            { date: '12.20', zh: 'Lookmhee 福州见面会', en: 'Lookmhee 1st FanMeet in Fuzhou' },
+            { date: '12.21', zh: 'Sonya 福州见面会', en: 'Sonya 1st FanMeet in Fuzhou' },
+            { date: '12.27', zh: '冬日浪漫之夜 #HIKARUxLOOKMHEE', en: 'MYSTIC ROMANCE #HIKARUxLOOKMHEE' }
+            ]
+        },
+        {
+            type: 'thanks',
+            bg: 'https://raw.githubusercontent.com/Dmsama2/qx/main/%E6%84%9F%E8%B0%A2%E9%A1%B5%E9%9D%A2%E5%9B%BE.jpg',
+            zh: 'Dear Bestie',
+            en: 'To Our Dearest Friends',
+            content: '回望这一年，因为LMSY，因为共同的热爱，我们相聚同行，走过了一段温暖而闪光的旅程。从 Harmony Secret 的官宣到终映，从最初的期待到一次次真实的相见，每一个瞬间都被认真珍藏。\n\n感谢你在屏幕前的每一次守候，让心意跨越山海、汇成回响；也感谢奔赴现场的每一个你，用脚步让热爱落地生根、声声呼应。',
+            contentEn: 'Looking back on the past year, LMSY has brought us together through a shared passion, allowing us to walk side by side on a journey that was both heartwarming and bright. From the official announcement to the finale of Harmony Secret, and from our eager anticipation to every real-life gathering, each moment has been truly cherished.\n\nThank you to everyone who stayed by your screens, sending love that echoes across mountains and seas. And thank you to everyone who attended the events in person, letting love take root with every step and gracing each moment with your presence.'
+        },
+        {
+            type: 'starry',
+            bg: 'https://raw.githubusercontent.com/Dmsama2/qx/main/%E8%AE%B8%E6%84%BF%E8%83%8C%E6%99%AF%E5%9B%BE.jpg'
+        }
         ];
 
-        // --- Helper Components ---
-        const Icon = ({ name, size = 20, className }) => {
-            const paths = {
-                play: <polygon points="5 3 19 12 5 21 5 3" />,
-                pause: <g><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></g>,
-                upload: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />,
-                chevronRight: <path d="m9 18 6-6-6-6" />,
-                chevronLeft: <path d="m15 18-6-6 6-6" />,
-                chevronDown: <path d="m6 9 6 6 6-6" />,
-                star: <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="currentColor" />,
-                plus: <path d="M5 12h14M12 5v14" />,
-                x: <path d="M18 6L6 18M6 6l12 12" />,
-                trash: <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />,
-                music: <path d="M9 18V5l12-2v13" />,
-                quote: <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.75-2-2-2H3c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h1c0 2.5-2 4.5-4 5v1h3zm13 0c3 0 7-1 7-8V5c0-1.25-.75-2-2-2h-5c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h1c0 2.5-2 4.5-4 5v1h3z" fill="currentColor" />,
-                link: <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />,
-            };
-            return (
-                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                    {paths[name] || paths.star}
-                </svg>
-            );
-        };
-
-        // --- Slides Components ---
+        function App() {
+        const [currentPage, setCurrentPage] = useState(0);
+        const [user, setUser] = useState(null);
+        const [wishes, setWishes] = useState([]);
+        const [isModalOpen, setIsModalOpen] = useState(false);
+        const [selectedStar, setSelectedStar] = useState(null);
+        const [newWish, setNewWish] = useState('');
+        const [isAdmin, setIsAdmin] = useState(false);
+        const [isAuthChecking, setIsAuthChecking] = useState(true);
+        const [expandedMonth, setExpandedMonth] = useState(null);
+        const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // Detect Mobile
+        const [showGuide, setShowGuide] = useState(true); // 新增：是否显示新手引导
         
-        const IntroSlide = ({ onStart, theme, onSecretTrigger }) => (
-            <div className="h-full flex flex-col justify-center items-center text-center px-8 relative group" onClick={onStart}>
-                <div className="space-y-6 relative z-20 animate-fade-in">
-                    <h2 className="text-xl font-serif italic tracking-widest text-gray-500">LMSY Memory Log</h2>
-                    <h1 
-                        className="text-8xl font-serif font-bold text-gray-800 tracking-tighter leading-none italic theme-transition select-none active:scale-95 transform transition-transform" 
-                        style={{ color: theme.primary, cursor: 'default' }}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onSecretTrigger();
-                        }}
-                    >
-                        2025
-                    </h1>
-                    <div className="w-24 h-1 bg-gray-200 mx-auto rounded-full overflow-hidden">
-                        <div className="h-full w-full animate-shimmer" style={{ background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)` }}></div>
-                    </div>
-                    <p className="text-sm font-sans text-gray-400 uppercase tracking-[0.3em]">Our Journey Together</p>
-                </div>
-                
-                <div className="absolute bottom-20 left-0 right-0 flex flex-col items-center animate-pulse">
-                    <button className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/80 shadow-lg border border-gray-100 hover:scale-105 transition-transform backdrop-blur-sm">
-                        <span className="text-xs font-bold uppercase tracking-widest text-gray-600">Start Reading</span>
-                        <Icon name="chevronRight" size={14} />
-                    </button>
-                </div>
-            </div>
-        );
+        // Touch state for Mobile Swipe
+        const touchStartRef = useRef(null);
+        const touchEndRef = useRef(null);
+        
+        // Admin Login States
+        const [adminClickCount, setAdminClickCount] = useState(0);
+        const [showAdminLogin, setShowAdminLogin] = useState(false);
+        const [adminPassword, setAdminPassword] = useState('');
+        const [isShake, setIsShake] = useState(false);
 
-        const MonthSlide = ({ data, theme }) => {
-            const [showAll, setShowAll] = useState(false);
-            useEffect(() => setShowAll(false), [data]);
-            const displayEvents = showAll ? data.events : data.events.slice(0, 4);
+        const audioRef = useRef(null);
+        const clickTimerRef = useRef(null);
 
-            return (
-                <div className="h-full flex flex-col justify-center px-8 md:px-12 relative animate-page-turn">
-                    <div className="absolute top-[-20%] left-0 text-[10rem] md:text-[14rem] font-bold font-serif opacity-30 pointer-events-none theme-transition select-none z-0 leading-none mix-blend-multiply" style={{ color: theme.primary }}>
-                        {data.monthNum}
-                    </div>
+        useEffect(() => {
+            const handleResize = () => setIsMobile(window.innerWidth < 768);
+            window.addEventListener('resize', handleResize);
+            return () => window.removeEventListener('resize', handleResize);
+        }, []);
 
-                    <div className="mb-6 relative z-10 mt-8 md:mt-0">
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="px-3 py-1 rounded-full text-[10px] font-bold text-white tracking-widest uppercase theme-transition shadow-sm" style={{ backgroundColor: theme.accent }}>{data.monthEn}</span>
-                            <span className="text-sm font-serif italic text-gray-500">{data.year}</span>
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-serif font-bold text-gray-800 leading-tight mb-4">{data.title}</h2>
-                        <p className="text-gray-600 font-sans leading-relaxed text-justify max-w-md font-medium text-[15px]">{data.descCn}</p>
-                        <p className="text-xs text-gray-400 mt-2 italic font-serif border-l-2 pl-3 theme-transition" style={{ borderColor: theme.accent }}>{data.desc}</p>
-                    </div>
-
-                    {/* Stats Boxes Area */}
-                    <div className="grid grid-cols-2 gap-4 mb-8 relative z-10">
-                        <div id="stats-box" className="p-4 rounded-2xl bg-white/60 border border-white/60 shadow-sm backdrop-blur-md transition-transform hover:scale-105 h-full flex flex-col justify-between">
-                            <div className="h-12 flex items-center justify-start">
-                                <div className="text-3xl font-serif font-bold theme-transition" style={{ color: theme.primary }}>{data.stats.value}{data.stats.unit}</div>
-                            </div>
-                            <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-2 pt-2 border-t border-gray-200/50">{data.stats.label}</div>
-                        </div>
-                        
-                        <div id="highlight-box" className="p-4 rounded-2xl bg-white/60 border border-white/60 shadow-sm backdrop-blur-md transition-transform hover:scale-105 h-full flex flex-col justify-between">
-                            <div className="h-12 flex items-center justify-start overflow-hidden">
-                                <div className="text-sm font-bold text-gray-800 break-words line-clamp-2">{data.highlight.tag}</div>
-                            </div>
-                            <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold mt-2 pt-2 border-t border-gray-200/50">{data.highlight.label}</div>
-                        </div>
-                    </div>
-
-                    {/* Optimized Event List: Grid-based Symmetrical Alignment */}
-                    <div className={`space-y-4 relative z-10 transition-all duration-500 ${showAll ? 'max-h-[320px] overflow-y-auto custom-scrollbar pr-2' : ''}`}>
-                        {displayEvents.map((ev, i) => (
-                            <div key={i} className="grid grid-cols-2 gap-4 group items-center">
-                                {/* First Column: Date aligned with Left Stats Box */}
-                                <div className="text-[11px] font-bold font-mono opacity-60 flex items-center" style={{ color: theme.primary }}>
-                                    {ev.day}
-                                </div>
-                                
-                                {/* Second Column: Content aligned with Right Highlight Box */}
-                                <div className="flex flex-col justify-center">
-                                    <div className="text-[12px] font-bold text-gray-700 leading-tight group-hover:text-gray-900 transition-colors uppercase tracking-tight truncate">
-                                        {ev.title}
-                                    </div>
-                                    <div className="text-[9px] font-medium text-gray-400 italic tracking-wider truncate">
-                                        {ev.tag}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {data.events.length > 4 && !showAll && (
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); setShowAll(true); }}
-                            className="mt-6 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors self-start z-20"
-                        >
-                            <Icon name="chevronDown" size={12} /> View All Events
-                        </button>
-                    )}
-                </div>
-            );
-        };
-
-        const LetterSlide = ({ theme }) => (
-            <div className="h-full flex flex-col justify-center py-4 px-6 md:px-12 animate-page-turn relative">
-                <div className="max-h-[85vh] overflow-y-auto custom-scrollbar p-6 md:p-10 bg-white/40 backdrop-blur-xl rounded-[2.5rem] border border-white/50 shadow-2xl relative group transition-colors duration-500">
-                    <div className="absolute top-0 left-0 w-2 h-full theme-transition" style={{ backgroundColor: theme.accent }}></div>
-                    <Icon name="quote" size={36} className="absolute top-6 right-8 opacity-10 theme-transition" style={{ color: theme.primary }} />
-                    <h3 className="text-2xl font-serif font-bold text-gray-800 italic mb-5">Dear Bestie,</h3>
-                    <div className="space-y-6 text-[13px] md:text-sm text-gray-700 leading-relaxed font-sans text-justify">
-                        <div className="group/item">
-                            <p className="font-semibold text-gray-800 mb-1">回望这一年，因为LMSY，因为共同的热爱，我们相聚同行，走过了一段温暖而闪光的旅程。</p>
-                            <p className="text-xs text-gray-500 italic font-serif">Looking back on this year, because of LMSY and our shared love, we have walked together on a warm and sparkling journey.</p>
-                        </div>
-                        <div className="group/item">
-                            <p className="font-semibold text-gray-800 mb-1">从Harmony Secret的官宣到终映，从澳门、香港到新加坡、福州……每一场见面会与签售会，都印着我们并肩的足迹。</p>
-                            <p className="text-xs text-gray-500 italic font-serif">From the announcement to the finale of Harmony Secret, from Macau and Hong Kong to Singapore and Fuzhou... every fan meeting and fansign marks our footprints side by side.</p>
-                        </div>
-                        <div className="group/item">
-                            <p className="font-semibold text-gray-800 mb-1">每一次突破，都离不开你全力以赴的支持；每一份付出，都化为LMSY前行路上坚实的力量。那些我们共同见证的数字与成长，每一笔都有你的身影。</p>
-                            <p className="text-xs text-gray-500 italic font-serif">Every breakthrough comes from your all-out support; every effort turns into solid strength for LMSY's journey ahead. You are in every figure and growth we witnessed together.</p>
-                        </div>
-                        <div className="group/item">
-                            <p className="font-semibold text-gray-800 mb-1">感谢你在屏幕前的每一次守候，让心意跨越山海、点亮星河；也感谢奔赴现场的每一个你，用奔赴让热爱落地生根、声声回响。</p>
-                            <p className="text-xs text-gray-500 italic font-serif">Thank you for every wait behind the screen, letting love cross mountains and seas to light up the galaxy; and thank you for traveling to the scene, letting passion take root and echo loudly.</p>
-                        </div>
-                    </div>
-                    <div className="mt-8 pt-6 border-t border-gray-100 flex justify-between items-end">
-                        <div className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Forever With You</div>
-                        <div className="font-serif italic text-xl font-bold" style={{ color: theme.accent }}>LMSY</div>
-                    </div>
-                </div>
-            </div>
-        );
-
-        const WishSlide = ({ theme, isAdmin }) => {
-            const [wishes, setWishes] = useState([]);
-            const [isModalOpen, setIsModalOpen] = useState(false);
-            const [newWish, setNewWish] = useState("");
-            const [selectedWish, setSelectedWish] = useState(null);
-            const [user, setUser] = useState(null);
-
-            const { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, collection, query, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp, increment } = window.FirebaseSDK;
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'lmsy-memory-log';
-            const firebaseConfig = JSON.parse(__firebase_config);
-            const app = window.FirebaseSDK.initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-
-            useEffect(() => {
-                const initAuth = async () => {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else { await signInAnonymously(auth); }
-                };
-                initAuth();
-                const unsubscribeAuth = onAuthStateChanged(auth, setUser);
-                return () => unsubscribeAuth();
-            }, []);
-
-            useEffect(() => {
-                if (!user) return;
-                const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'wishes'));
-                const unsubscribe = onSnapshot(q, (snapshot) => {
-                    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    setWishes(data);
-                }, (error) => console.error("Firestore error:", error));
-                return () => unsubscribe();
-            }, [user]);
-
-            const addWish = async () => {
-                if (!newWish.trim() || !user) return;
+        // --- LeanCloud Auth Logic ---
+        useEffect(() => {
+            const initAuth = async () => {
                 try {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'wishes'), {
-                        text: newWish,
-                        x: Math.random() * 80 + 10,
-                        y: Math.random() * 60 + 10,
-                        scale: 0.8 + Math.random() * 0.5,
-                        likes: 0,
-                        createdAt: serverTimestamp(),
-                        userId: user.uid
-                    });
-                    setNewWish("");
-                    setIsModalOpen(false);
-                } catch (e) { console.error("Add wish error:", e); }
-            };
-
-            return (
-                <div className="h-full w-full relative overflow-hidden animate-page-turn">
-                    <div className="absolute inset-0 z-10 pointer-events-none">
-                        {wishes.map(w => (
-                            <div 
-                                key={w.id}
-                                className="absolute text-yellow-400 star-item animate-star-twinkle drop-shadow-lg pointer-events-auto"
-                                style={{ 
-                                    left: `${w.x}%`, 
-                                    top: `${w.y}%`, 
-                                    transform: `scale(${w.scale})`,
-                                    animationDelay: `${parseInt(w.id.slice(0,5), 36) % 5}s`
-                                }}
-                                onClick={(e) => { e.stopPropagation(); setSelectedWish(w); }}
-                            >
-                                <Icon name="star" size={24} fill="currentColor" />
-                                {w.likes > 0 && (
-                                    <div className="absolute -top-2 -right-2 bg-pink-500 text-white text-[8px] font-bold px-1 rounded-full">{w.likes}</div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="relative z-20 h-full flex flex-col justify-end items-center pointer-events-none text-white pb-16 md:pb-12">
-                        <div className="text-center mb-4 backdrop-blur-sm bg-white/10 p-4 rounded-2xl border border-white/10 shadow-lg scale-90 md:scale-100">
-                            <h2 className="text-xl font-serif font-bold mb-1 drop-shadow-md">Make a Wish / 许个愿</h2>
-                            <p className="text-[10px] text-gray-300 font-medium uppercase tracking-wider">Click to add a star / 点击按钮点亮星空</p>
-                        </div>
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
-                            className="pointer-events-auto flex items-center gap-2 px-6 py-3 bg-white text-gray-900 rounded-full shadow-xl hover:scale-105 transition-transform theme-transition hover:shadow-white/50"
-                        >
-                            <Icon name="plus" size={14} />
-                            <span className="font-bold tracking-widest text-[10px] uppercase">Write Message / 写下寄语</span>
-                        </button>
-                    </div>
-
-                    {isModalOpen && (
-                        <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in" onClick={(e) => e.stopPropagation()}>
-                            <div className="bg-white w-full max-w-sm p-6 rounded-2xl shadow-2xl animate-pop-in">
-                                <h3 className="text-lg font-bold text-gray-800 mb-4">New Year Wish / 新年寄语</h3>
-                                <textarea className="w-full p-4 bg-gray-50 rounded-xl mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-pink-200 resize-none text-gray-800" rows="4" placeholder="Write message here..." value={newWish} onChange={e => setNewWish(e.target.value)}></textarea>
-                                <div className="flex gap-2">
-                                    <button onClick={() => setIsModalOpen(false)} className="flex-1 py-3 text-xs font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition">CANCEL / 取消</button>
-                                    <button onClick={addWish} className="flex-1 py-3 text-xs font-bold text-white rounded-xl shadow-lg theme-transition bg-gray-900">SEND / 发送 ✨</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {selectedWish && (
-                        <div className="absolute inset-0 z-50 flex items-center justify-center p-6 animate-fade-in" onClick={(e) => { e.stopPropagation(); setSelectedWish(null); }}>
-                            <div className="bg-yellow-100 w-64 p-6 shadow-xl transform rotate-2 animate-pop-in relative font-mono text-gray-800 text-sm leading-relaxed border-t-8 border-yellow-200/50">
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-12 bg-yellow-200/50 blur-sm rounded-full opacity-50"></div>
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="flex-1">"{selectedWish.text}"</div>
-                                    {isAdmin && (
-                                        <button onClick={async (e) => { e.stopPropagation(); await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wishes', selectedWish.id)); setSelectedWish(null); }} className="text-red-500 hover:scale-110 transition ml-2"><Icon name="trash" size={16} /></button>
-                                    )}
-                                </div>
-                                <div className="mt-4 flex justify-between items-center border-t border-yellow-200 pt-2">
-                                    <div className="text-xs opacity-50 font-bold">From a Bestie</div>
-                                    <button onClick={async (e) => { e.stopPropagation(); await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'wishes', selectedWish.id), { likes: increment(1) }); }} className="flex items-center gap-1 bg-white/50 px-2 py-1 rounded-full text-lg hover:scale-125 transition-transform active:scale-90">🌸 <span className="text-[10px] font-bold">{selectedWish.likes || 0}</span></button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
-        // --- Main App Component ---
-        const App = () => {
-            const [currentSlide, setCurrentSlide] = useState(0);
-            const [isPlaying, setIsPlaying] = useState(false);
-            const [theme, setTheme] = useState({ primary: '#2D3748', accent: '#F4A3C6', bg: '#FFFFFF' });
-            const [showGuide, setShowGuide] = useState(false);
-            const [bgImages, setBgImages] = useState({});
-            const [secretCount, setSecretCount] = useState(0);
-            const [showUpload, setShowUpload] = useState(false);
-            const [user, setUser] = useState(null);
-            const [urlInput, setUrlInput] = useState("");
-            const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
-            
-            const audioRef = useRef(null);
-            const imgRef = useRef(null);
-
-            const { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore, doc, setDoc, onSnapshot } = window.FirebaseSDK;
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'lmsy-memory-log';
-            const firebaseConfig = JSON.parse(__firebase_config);
-            const app = window.FirebaseSDK.initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-
-            useEffect(() => {
-                const initAuth = async () => {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else { await signInAnonymously(auth); }
-                };
-                initAuth();
-                const unsubscribeAuth = onAuthStateChanged(auth, setUser);
-                return () => unsubscribeAuth();
-            }, []);
-
-            useEffect(() => {
-                if (!user) return;
-                const unsub = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'backgrounds'), (docSnap) => {
-                    if (docSnap.exists()) setBgImages(prev => ({ ...prev, ...docSnap.data() }));
-                });
-                return () => unsub();
-            }, [user]);
-
-            useEffect(() => {
-                const audio = audioRef.current;
-                const attemptPlay = () => {
-                    if (!audio) return;
-                    audio.volume = 0.5;
-                    audio.play().then(() => setIsPlaying(true)).catch(() => {
-                        const enableAudio = () => { audio.play().then(() => setIsPlaying(true)); document.removeEventListener('click', enableAudio); };
-                        document.addEventListener('click', enableAudio);
-                    });
-                };
-                attemptPlay();
-            }, []);
-
-            const saveImageUrl = async () => {
-                if (!urlInput.trim() || !user) return;
-                try {
-                    const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'backgrounds');
-                    await setDoc(settingsRef, { [`slide_${currentSlide}`]: urlInput.trim() }, { merge: true });
-                    setIsLinkModalOpen(false);
-                    setUrlInput("");
-                } catch (err) { console.error("Cloud Link Sync Failed"); }
-            };
-
-            const nextSlide = () => setCurrentSlide(c => (c < STORY_DATA.length - 1 ? c + 1 : c));
-            const prevSlide = () => setCurrentSlide(c => (c > 0 ? c - 1 : c));
-
-            const handleContainerClick = (e) => {
-                if (e.target.closest('button') || e.target.closest('.upload-zone') || e.target.closest('textarea') || e.target.closest('.star-item') || isLinkModalOpen) return;
-                if (e.clientX > window.innerWidth / 2) nextSlide(); else prevSlide();
-            };
-
-            const handleImageLoad = () => {
-                const colorThief = new ColorThief();
-                const img = imgRef.current;
-                if (img && img.complete && img.naturalWidth > 0) {
-                    try {
-                        const palette = colorThief.getPalette(img, 3);
-                        const primaryHex = `#${((1 << 24) + (palette[0][0] << 16) + (palette[0][1] << 8) + palette[0][2]).toString(16).slice(1)}`;
-                        const accentHex = `#${((1 << 24) + (palette[1][0] << 16) + (palette[1][1] << 8) + palette[1][2]).toString(16).slice(1)}`;
-                        setTheme({ primary: primaryHex, accent: accentHex, bg: 'transparent' });
-                    } catch (e) { setTheme({ primary: '#2D3748', accent: '#F4A3C6', bg: 'transparent' }); }
+                    // LeanCloud 匿名登录
+                    const u = await AV.User.loginAnonymously();
+                    setUser(u);
+                } catch (err) { 
+                    console.error("LeanCloud Login Error:", err); 
+                } finally { 
+                    setIsAuthChecking(false); 
                 }
             };
+            initAuth();
+        }, []);
 
-            const currentData = STORY_DATA[currentSlide];
-            const currentBgImage = bgImages[`slide_${currentSlide}`] || bgImages[currentSlide] || DEFAULT_IMAGE;
-            const isWishSlide = currentData.type === 'wish';
+        // Music
+        useEffect(() => {
+            const attemptPlay = () => {
+            if (audioRef.current && audioRef.current.paused) {
+                audioRef.current.volume = 0.5;
+                audioRef.current.play().catch(err => {});
+            }
+            };
+            window.addEventListener('click', attemptPlay, { once: true });
+            window.addEventListener('touchstart', attemptPlay, { once: true });
+            return () => {
+            window.removeEventListener('click', attemptPlay);
+            window.removeEventListener('touchstart', attemptPlay);
+            };
+        }, []);
+
+        // --- LeanCloud Data Fetching (Polling) ---
+        const fetchWishes = async () => {
+            const query = new AV.Query('Wish');
+            // 只获取最近的 100 条许愿，防止过多
+            query.limit(100);
+            query.descending('createdAt');
+            try {
+                const results = await query.find();
+                const formattedWishes = results.map(obj => ({
+                    id: obj.id,
+                    ...obj.attributes,
+                    createdAt: obj.createdAt
+                }));
+                setWishes(formattedWishes);
+            } catch (error) {
+                console.error("Fetch Wishes Error:", error);
+            }
+        };
+
+        useEffect(() => {
+            fetchWishes(); // 首次加载
+            
+            // 简单的轮询，每5秒刷新一次数据，模拟实时效果
+            const interval = setInterval(fetchWishes, 5000);
+            return () => clearInterval(interval);
+        }, []);
+
+        const handleAddWish = async () => {
+            if (!newWish.trim()) return;
+            try {
+                // 创建 Wish 对象
+                const Wish = AV.Object.extend('Wish');
+                const wish = new Wish();
+                
+                wish.set('text', newWish);
+                wish.set('likes', 0);
+                wish.set('x', Math.random() * 80 + 10);
+                wish.set('y', Math.random() * 60 + 10);
+                if (user) {
+                    wish.set('authorId', user.id);
+                }
+                
+                await wish.save();
+                
+                setNewWish(''); 
+                setIsModalOpen(false);
+                fetchWishes(); // 立即刷新一次
+            } catch (err) { 
+                console.error("Add Wish Error:", err); 
+                alert("许愿失败，请稍后再试");
+            }
+        };
+
+        const handleLike = async (wishId, e) => {
+            e.stopPropagation();
+            try {
+                // LeanCloud 原子计数器更新
+                const wish = AV.Object.createWithoutData('Wish', wishId);
+                wish.increment('likes', 1);
+                await wish.save();
+                
+                // 本地乐观更新 UI
+                setSelectedStar(prev => prev && prev.id === wishId ? {...prev, likes: (prev.likes || 0) + 1} : prev);
+                // 更新列表中的数据
+                setWishes(prev => prev.map(w => w.id === wishId ? {...w, likes: (w.likes || 0) + 1} : w));
+            } catch (err) { 
+                console.error("Like Error:", err); 
+            }
+        };
+        
+        const handleDeleteWish = async (wishId) => {
+             if(!isAdmin) return;
+             try {
+                const wish = AV.Object.createWithoutData('Wish', wishId);
+                await wish.destroy();
+                setSelectedStar(null);
+                fetchWishes(); // 刷新
+             } catch(err) {
+                 console.error("Delete Error", err);
+             }
+        }
+
+        const handleAdminTrigger = (e) => {
+            e.stopPropagation();
+            if (clickTimerRef.current) {
+                clearTimeout(clickTimerRef.current);
+            }
+            setAdminClickCount(prev => {
+                const newCount = prev + 1;
+                if (newCount >= 5) {
+                    setTimeout(() => {
+                        setShowAdminLogin(true);
+                    }, 50);
+                    return 0;
+                }
+                return newCount;
+            });
+            clickTimerRef.current = setTimeout(() => setAdminClickCount(0), 1000);
+        };
+
+        const handleAdminLogin = () => {
+            if (adminPassword === "lmsy2025") {
+                setIsAdmin(true);
+                setShowAdminLogin(false);
+                setAdminPassword('');
+            } else {
+                setIsShake(true);
+                setTimeout(() => setIsShake(false), 500);
+            }
+        };
+
+        const next = () => {
+            setCurrentPage(prev => Math.min(prev + 1, PAGES_DATA.length - 1));
+            setShowGuide(false); // 翻页后隐藏引导
+        }
+        const prev = () => {
+            setCurrentPage(prev => Math.max(prev - 1, 0));
+        }
+
+        // --- Mobile Swipe Handlers (竖向滑动翻页) ---
+        const handleTouchStart = (e) => {
+            touchStartRef.current = e.targetTouches[0].clientY;
+            touchEndRef.current = null;
+        };
+
+        const handleTouchMove = (e) => {
+            touchEndRef.current = e.targetTouches[0].clientY;
+        };
+
+        const handleTouchEnd = () => {
+            if (!touchStartRef.current || !touchEndRef.current) return;
+            const distance = touchStartRef.current - touchEndRef.current;
+            const isUpSwipe = distance > 50;   // 手指向上滑，距离大于50px
+            const isDownSwipe = distance < -50; // 手指向下滑，距离大于50px
+
+            if (isUpSwipe) {
+                next();
+            }
+            if (isDownSwipe) {
+                prev();
+            }
+            
+            // 重置
+            touchStartRef.current = null;
+            touchEndRef.current = null;
+        };
+
+        const handlePageClick = (e) => {
+            if (isMobile) return; // 手机端禁用点击左右翻页，强制使用滑动，防止误触和混淆
+            
+            if (e.target.closest('button') || e.target.closest('.modal-content') || e.target.closest('.no-nav') || e.target.closest('input')) return;
+            const { clientX } = e;
+            const width = window.innerWidth;
+            if (clientX < width * 0.3) prev();
+            else if (clientX > width * 0.7) next();
+        };
+
+        const renderPage = (page, index) => {
+            const isActive = index === currentPage;
+            const isPast = index < currentPage;
+            const isFuture = index > currentPage;
+
+            const isLightMode = page.type !== 'starry';
+            const textColorClass = isLightMode ? 'text-stone-800' : 'text-white';
+            const subTextColorClass = isLightMode ? 'text-stone-500' : 'text-stone-400';
+
+            const pageClassName = `absolute inset-0 transition-all duration-[1000ms] ease-out z-10 overflow-hidden ${
+            isPast ? 'opacity-0 scale-105 pointer-events-none' : isFuture ? 'opacity-0 translate-y-4' : 'opacity-100'
+            }`;
+            
+            const style = { display: isActive || isPast ? 'block' : 'none', zIndex: index };
 
             return (
-                <div className="h-screen w-full relative overflow-hidden font-sans" onClick={handleContainerClick}>
-                    <audio ref={audioRef} src={BGM.url} loop crossOrigin="anonymous" />
-                    <div className={`absolute inset-0 z-0 ${isWishSlide ? 'bg-black' : 'bg-gray-100'} transition-colors duration-1000`}>
-                         <img key={currentSlide} ref={imgRef} src={currentBgImage} alt="BG" className={`w-full h-full object-cover animate-fade-in transition-all duration-[2000ms] ${isWishSlide ? 'opacity-40' : 'opacity-100'}`} crossOrigin="anonymous" onLoad={handleImageLoad} />
-                    </div>
-                    <div className={`absolute inset-0 z-10 pointer-events-none transition-all duration-1000 ${isWishSlide ? 'seamless-overlay dark-mode' : 'seamless-overlay'}`}></div>
-
-                    <div className="relative z-20 h-full w-full lg:w-[55%] flex flex-col">
-                        <div className="p-6 md:p-8 flex justify-end items-center">
-                            <button onClick={(e) => { e.stopPropagation(); if(isPlaying){audioRef.current.pause(); setIsPlaying(false);} else {audioRef.current.play(); setIsPlaying(true);} }} className={`p-2.5 rounded-full backdrop-blur shadow-sm hover:scale-110 transition theme-transition ${isWishSlide ? 'bg-white/20 text-white' : 'bg-white/40 text-gray-800'}`} style={{ color: isWishSlide ? 'white' : theme.primary }}>
-                                {isPlaying ? <div className="flex gap-0.5 h-3 items-end"><div className="music-bar w-0.5"></div><div className="music-bar w-0.5"></div><div className="music-bar w-0.5"></div></div> : <Icon name="play" size={14} />}
-                            </button>
-                        </div>
-                        <div className="flex-1 relative overflow-visible flex flex-col justify-center cursor-pointer">
-                            <div key={currentSlide} className="h-full w-full">
-                                {currentData.type === 'intro' && <IntroSlide onStart={nextSlide} theme={theme} onSecretTrigger={() => { const c = secretCount + 1; setSecretCount(c); if(c>=5){ setShowUpload(true); setSecretCount(0); } }} />}
-                                {currentData.type === 'month' && <MonthSlide data={currentData} theme={theme} />}
-                                {currentData.type === 'letter' && <LetterSlide theme={theme} />}
-                                {currentData.type === 'wish' && <WishSlide theme={theme} isAdmin={showUpload} />}
-                            </div>
-                        </div>
-                    </div>
-
-                    {showUpload && (
-                        <div className="absolute top-6 right-6 z-50 animate-pop-in upload-zone" onClick={(e) => e.stopPropagation()}>
-                            <button onClick={() => setIsLinkModalOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md border border-white/40 text-white rounded-full hover:bg-white/30 transition shadow-lg group">
-                                <Icon name="link" size={16} /><span className="text-xs font-bold tracking-wider uppercase">Set Global BG URL: {currentSlide}</span>
-                            </button>
-                        </div>
-                    )}
-
-                    {isLinkModalOpen && (
-                        <div className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in" onClick={(e) => e.stopPropagation()}>
-                            <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl animate-pop-in border border-white/20">
-                                <h3 className="text-lg font-bold text-gray-800 mb-2">Background URL Sync</h3>
-                                <p className="text-xs text-gray-400 mb-4 uppercase tracking-widest font-bold">Paste URL to update all users</p>
-                                <input type="text" className="w-full p-4 bg-gray-50 rounded-xl mb-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 text-gray-800 border border-gray-100" placeholder="https://..." value={urlInput} onChange={(e) => setUrlInput(e.target.value)} />
-                                <div className="flex gap-2">
-                                    <button onClick={() => setIsLinkModalOpen(false)} className="flex-1 py-3 text-xs font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition">CANCEL</button>
-                                    <button onClick={saveImageUrl} className="flex-1 py-3 text-xs font-bold text-white rounded-xl shadow-lg bg-gray-900 hover:bg-black transition uppercase tracking-widest">SAVE SYNC</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className={`absolute bottom-8 right-8 z-20 flex items-center gap-3 backdrop-blur-sm px-4 py-2 rounded-full transition-colors ${isWishSlide ? 'bg-white/10 text-white/80' : 'bg-black/10 text-white/80'}`}>
-                        <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-green-400 animate-pulse' : 'bg-white'}`}></div>
-                        <span className="text-xs font-bold tracking-widest uppercase text-shadow-sm">{BGM.title} - {BGM.artist}</span>
-                    </div>
+            <div key={index} className={pageClassName} style={style} onClick={handlePageClick}>
+                <div className="absolute inset-0">
+                {/* UPDATED: Mobile background positioning.
+                    Adjusted from 75% to 85% based on feedback.
+                    Now it's closer to the right edge but not fully 100% right.
+                */}
+                <img 
+                    src={page.bg} 
+                    className="w-full h-full object-cover"
+                    style={{ objectPosition: isMobile ? '85% center' : 'center center' }}
+                    alt="Background" 
+                />
                 </div>
+                
+                {isLightMode && (
+                <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/80 to-transparent md:bg-gradient-to-r md:from-white md:via-white/90 md:to-transparent pointer-events-none z-10"></div>
+                )}
+                {!isLightMode && (
+                <div className="absolute inset-0 bg-black/40 pointer-events-none z-10"></div>
+                )}
+
+                <div className={`relative w-full h-full flex flex-col justify-end md:justify-center p-8 md:p-24 z-20 pb-20 md:pb-24 ${textColorClass}`}>
+                {page.type === 'cover' ? (
+                    <div className="max-w-2xl animate-fade-in-up text-center md:text-left">
+                    <h1 className="text-8xl md:text-[11rem] font-header mb-8 md:mb-12 leading-none tracking-tighter text-stone-900 drop-shadow-none opacity-100">{page.title}</h1>
+                    <p 
+                        className="text-xl md:text-2xl font-header tracking-[0.3em] mb-8 uppercase border-b border-stone-800/20 pb-4 inline-block cursor-pointer select-none hover:text-stone-500 transition-colors no-nav text-stone-800"
+                        onClick={handleAdminTrigger}
+                    >
+                        {page.subtitle}
+                    </p>
+                    <div className="space-y-4">
+                        <p className="text-lg md:text-2xl font-body font-light leading-relaxed whitespace-pre-wrap text-stone-800">{page.desc}</p>
+                        <p className="text-xs md:text-sm font-sans italic tracking-wide text-stone-500">{page.descEn}</p>
+                    </div>
+
+                    {/* MOVED GUIDE CODE FROM HERE */}
+
+                    </div>
+                ) : page.type === 'thanks' ? (
+                    <div className="max-w-xl mx-auto md:mx-0 animate-fade-in-up">
+                    <div className="md:border-l-2 md:border-stone-800 md:pl-12">
+                        <h2 className="text-4xl md:text-6xl font-header mb-4">{page.zh}</h2>
+                        <h3 className={`text-sm md:text-lg font-header mb-10 italic tracking-widest ${subTextColorClass}`}>{page.en}</h3>
+                        <div className="space-y-8 leading-relaxed text-sm md:text-lg font-body font-light whitespace-pre-wrap">
+                        <p>{page.content}</p>
+                        <p className={`${subTextColorClass} font-sans italic text-xs pt-4 border-t border-stone-200/50`}>{page.contentEn}</p>
+                        </div>
+                    </div>
+                    </div>
+                ) : page.type === 'starry' ? (
+                    <div className="w-full h-full">
+                    {wishes.map(wish => (
+                        <div 
+                        key={wish.id}
+                        className="absolute transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
+                        style={{ left: `${wish.x}%`, top: `${wish.y}%` }}
+                        onClick={() => setSelectedStar(wish)}
+                        >
+                        <Icons.Star size={12} fill="white" className="text-white animate-pulse shadow-glow transition-all duration-300 hover:scale-[3] hover:rotate-12" />
+                        </div>
+                    ))}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-8 text-center no-nav">
+                        <div className="animate-float">
+                            <h2 className="text-white text-4xl md:text-6xl font-header mb-4 tracking-widest drop-shadow-xl">星空寄语</h2>
+                            <p className="text-stone-300 font-header italic text-lg">Make a wish for us.</p>
+                        </div>
+                        <button 
+                        onClick={() => setIsModalOpen(true)}
+                        className="bg-white/10 backdrop-blur-md border border-white/40 text-white px-10 py-4 rounded-full flex items-center gap-3 hover:bg-white hover:text-black transition-all duration-300 shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105 uppercase tracking-widest text-sm font-bold"
+                        >
+                        <Icons.Send size={16} /> 许愿 / Write
+                        </button>
+                    </div>
+                    </div>
+                ) : (
+                    // Monthly Layout
+                    <div className="max-w-2xl animate-fade-in-up md:ml-12 relative">
+                    <span className={`text-stone-200/50 text-[6rem] md:text-[12rem] font-header absolute -top-16 md:-top-32 -left-4 md:-left-24 select-none pointer-events-none z-0 opacity-40 md:opacity-100`}>
+                        {page.month.substring(0, 3)}
+                    </span>
+                    <div className="relative z-10">
+                        <div className="flex flex-col md:flex-row md:items-baseline gap-2 md:gap-6 mb-6 md:mb-10">
+                            <h2 className="text-5xl md:text-7xl font-header tracking-tight">{page.zh}</h2>
+                            <span className={`font-header italic text-sm md:text-lg tracking-widest ${subTextColorClass}`}>{page.en}</span>
+                        </div>
+                        
+                        <div className="mb-8 md:mb-10 border-l border-stone-300 pl-4 md:pl-6 py-1">
+                        <p className="font-body text-base md:text-lg text-stone-700 leading-relaxed mb-2">{page.summary}</p>
+                        <p className="font-sans text-[10px] md:text-xs text-stone-400 tracking-wide uppercase">{page.summaryEn}</p>
+                        </div>
+
+                        <div className="space-y-4 md:space-y-5">
+                        {page.activities?.slice(0, 4).map((act, i) => (
+                            <div key={i} className="group flex items-center gap-4 md:gap-6 hover:translate-x-2 transition-transform duration-300">
+                            <span className="text-stone-400 font-sans text-[10px] md:text-xs font-bold border border-stone-200 px-2 py-1 rounded-sm">{act.date}</span>
+                            <div className="flex flex-col">
+                                <h4 className="text-sm md:text-lg font-body font-normal tracking-wide group-hover:text-stone-500 transition-colors truncate max-w-[200px] md:max-w-md">{act.zh}</h4>
+                            </div>
+                            </div>
+                        ))}
+                        </div>
+
+                        {page.activities?.length > 4 && (
+                        <button 
+                            onClick={() => setExpandedMonth(page)}
+                            className="mt-8 group flex items-center gap-3 text-stone-400 hover:text-stone-900 transition-colors text-[10px] md:text-xs tracking-[0.3em] uppercase font-bold no-nav"
+                        >
+                            <div className="w-8 h-[1px] bg-stone-300 group-hover:bg-stone-800 group-hover:w-16 transition-all"></div>
+                            View All
+                        </button>
+                        )}
+                    </div>
+                    </div>
+                )}
+                </div>
+
+                {/* --- 新增：操作引导 (已移动到这里，确保相对于整个屏幕定位) --- */}
+                {page.type === 'cover' && showGuide && (
+                    <>
+                        {/* Desktop Guide: Right Arrow - 现在在屏幕最右侧 */}
+                        {!isMobile && (
+                            <div className="hidden md:flex absolute right-12 top-1/2 -translate-y-1/2 z-50 flex-col items-center gap-4 animate-pulse pointer-events-none opacity-80">
+                                <div className="w-16 h-16 rounded-full border border-stone-800 flex items-center justify-center">
+                                    <Icons.ChevronRight className="text-stone-800" size={32} />
+                                </div>
+                                <span className="text-stone-800 text-xs font-header tracking-[0.2em] uppercase">Click Right</span>
+                            </div>
+                        )}
+                        
+                        {/* Mobile Guide: Up Arrow (Bottom) - 现在在屏幕最底部居中 */}
+                        {isMobile && (
+                            <div className="md:hidden absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 animate-bounce pointer-events-none opacity-70">
+                                <span className="text-stone-500 text-[10px] font-header tracking-[0.3em] uppercase mb-1">Swipe Up</span>
+                                <Icons.ChevronUp className="text-stone-500" size={24} />
+                            </div>
+                        )}
+                    </>
+                )}
+
+                <div className="absolute inset-y-0 left-0 w-24 flex items-center justify-start pl-4 cursor-w-resize z-30 md:flex hidden opacity-0 hover:opacity-100 transition-opacity">
+                    <Icons.ChevronLeft className={isLightMode ? "text-stone-300" : "text-white/50"} size={40} />
+                </div>
+                <div className="absolute inset-y-0 right-0 w-24 flex items-center justify-end pr-4 cursor-e-resize z-30 md:flex hidden opacity-0 hover:opacity-100 transition-opacity">
+                    <Icons.ChevronRight className={isLightMode ? "text-stone-300" : "text-white/50"} size={40} />
+                </div>
+            </div>
             );
         };
+
+        return (
+            <div 
+                className="fixed inset-0 bg-[#F9F9F7] select-none overflow-hidden text-stone-800 antialiased font-sans"
+                // 绑定触摸事件到最外层容器，实现全局滑动翻页
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+            >
+            
+            <audio 
+                ref={audioRef}
+                src="https://github.com/Dmsama2/Music/raw/refs/heads/main/ImYours.mp3"
+                loop
+                preload="auto"
+                style={{ display: 'none' }}
+            />
+
+            {PAGES_DATA.map((page, idx) => renderPage(page, idx))}
+
+            {expandedMonth && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-8">
+                <div className="absolute inset-0 bg-white/90 backdrop-blur-xl animate-fade-in" onClick={() => setExpandedMonth(null)}></div>
+                <div className="relative bg-white w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-none shadow-2xl p-8 md:p-16 animate-fade-in-up modal-content border border-stone-100">
+                    <button onClick={() => setExpandedMonth(null)} className="absolute top-6 right-6 p-2 hover:bg-stone-100 rounded-full transition-colors"><Icons.X className="text-stone-400"/></button>
+                    <h3 className="text-4xl md:text-5xl font-header text-stone-800 mb-2">{expandedMonth.zh}</h3>
+                    <p className="text-stone-400 tracking-[0.4em] uppercase text-xs mb-10 border-b border-stone-100 pb-6">Full Timeline</p>
+                    <div className="space-y-8">
+                    {expandedMonth.activities.map((act, i) => (
+                        <div key={i} className="flex gap-6 group">
+                        <div className="w-16 shrink-0 text-stone-400 font-sans text-xs pt-1 border-r border-stone-100 pr-4">{act.date}</div>
+                        <div className="flex-1">
+                            <h4 className="text-lg text-stone-800 mb-1 font-body font-light">{act.zh}</h4>
+                            <p className="text-stone-400 text-[10px] uppercase tracking-wider">{act.en}</p>
+                        </div>
+                        </div>
+                    ))}
+                    </div>
+                </div>
+                </div>
+            )}
+
+            {/* --- 许愿展示 Modal --- */}
+            {selectedStar && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[300] flex items-center justify-center p-4" onClick={() => setSelectedStar(null)}>
+                <div className="relative bg-[#fff] w-full max-w-sm p-8 md:p-12 shadow-[0_0_50px_rgba(255,255,255,0.2)] modal-content animate-fade-in-up rounded-sm" onClick={e => e.stopPropagation()}>
+                    <p className="text-stone-800 font-header italic text-2xl md:text-3xl leading-relaxed mb-10 text-center">"{selectedStar.text}"</p>
+                    <div className="flex items-center justify-center border-t border-stone-100 pt-6 relative">
+                    <button onClick={(e) => handleLike(selectedStar.id, e)} className="flex flex-col items-center gap-1 text-rose-500 hover:scale-110 transition-transform">
+                        <Icons.Heart size={24} fill={selectedStar.likes > 0 ? "currentColor" : "none"} />
+                        <span className="text-[10px] font-header uppercase tracking-widest text-stone-400">{selectedStar.likes || 0} Likes</span>
+                    </button>
+                    
+                    {isAdmin && (
+                        <button 
+                        onClick={() => handleDeleteWish(selectedStar.id)} 
+                        className="absolute right-0 top-6 text-stone-300 hover:text-red-500 transition-colors p-2"
+                        title="Delete Wish"
+                        >
+                        <Icons.Trash2 size={16}/>
+                        </button>
+                    )}
+                    </div>
+                </div>
+                </div>
+            )}
+
+            {/* --- Admin Login Modal (Secret) --- */}
+            {showAdminLogin && (
+                <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowAdminLogin(false)}>
+                    <div className={`bg-white/90 p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4 w-64 modal-content ${isShake ? 'animate-shake' : ''}`} onClick={e => e.stopPropagation()}>
+                        <div className="p-3 bg-stone-100 rounded-full mb-2">
+                            <Icons.Lock size={20} className="text-stone-400" />
+                        </div>
+                        <h4 className="font-header text-stone-600 text-lg">Secret Zone</h4>
+                        <input 
+                            type="password"
+                            autoFocus
+                            placeholder="Passcode"
+                            value={adminPassword}
+                            onChange={(e) => setAdminPassword(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
+                            className="w-full text-center bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm focus:outline-none focus:border-stone-400 font-mono tracking-widest"
+                        />
+                        <button 
+                            onClick={handleAdminLogin}
+                            className="w-full bg-stone-800 text-white py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-black transition-colors"
+                        >
+                            Unlock
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* --- 写下愿望 Modal --- */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-xl" onClick={() => setIsModalOpen(false)}></div>
+                <div className="relative bg-gradient-to-br from-stone-900 to-black border border-white/10 p-8 md:p-12 rounded-[2rem] w-full max-w-lg shadow-2xl modal-content">
+                    <h3 className="text-white text-3xl md:text-4xl font-header mb-2 text-center">Make a Wish</h3>
+                    <p className="text-white/40 text-center mb-8 tracking-[0.2em] uppercase text-[10px] font-sans">To LMSY & Future</p>
+                    <textarea 
+                    value={newWish} onChange={(e) => setNewWish(e.target.value)}
+                    placeholder="写下这一刻的心情..."
+                    className="w-full h-40 bg-white/5 border border-white/10 rounded-xl p-6 text-white text-lg focus:outline-none focus:border-rose-500/50 transition-all resize-none font-body font-light placeholder:text-stone-700"
+                    />
+                    <div className="mt-8 flex gap-4">
+                    <button onClick={() => setIsModalOpen(false)} className="flex-1 py-3 text-stone-500 hover:text-white transition-colors font-bold uppercase tracking-widest text-[10px]">Cancel</button>
+                    <button onClick={handleAddWish} className="flex-[2] py-3 bg-rose-500 text-white font-bold rounded-full hover:bg-rose-600 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-rose-500/20 text-xs tracking-widest uppercase">
+                        Send <Icons.Sparkles size={14}/>
+                    </button>
+                    </div>
+                </div>
+                </div>
+            )}
+
+            {isAuthChecking && (
+                <div className="fixed inset-0 z-[500] bg-[#F9F9F7] flex flex-col items-center justify-center text-stone-800">
+                <div className="animate-pulse font-header tracking-[0.5em] text-xs uppercase">Loading Memories</div>
+                </div>
+            )}
+            
+            {isAdmin && <div className="fixed bottom-2 right-2 text-[8px] text-stone-300 font-mono pointer-events-none opacity-50">ADM</div>}
+            </div>
+        );
+        }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
